@@ -270,4 +270,49 @@
     return [[JHBindingManager shared] isTarget:target boundForKeyPath:keyPath];
 }
 
+
+// MARK: - v1.2 新增：广播行为控制
+
+- (JHBinderVoidBlock)fire {
+    return ^JHBinder *{
+        [self.group fireFromFirstListenNode];
+        return self;
+    };
+}
+
+- (JHBinderVoidBlock)distinct {
+    return ^JHBinder *{
+        self.group.isDistinct = YES;
+        return self;
+    };
+}
+
+- (JHBinderVoidBlock)once {
+    return ^JHBinder *{
+        self.group.isOnce = YES;
+        return self;
+    };
+}
+
+- (JHBinderIntervalBlock)debounce {
+    return ^JHBinder *(NSTimeInterval interval) {
+        self.group.debounceInterval = interval;
+        return self;
+    };
+}
+
+- (JHBinderIntervalBlock)delay {
+    return ^JHBinder *(NSTimeInterval interval) {
+        self.group.delayInterval = interval;
+        return self;
+    };
+}
+
+- (JHBinderLabelBlock)log {
+    return ^JHBinder *(NSString *label) {
+        self.group.debugLabel = label;
+        return self;
+    };
+}
+
 @end

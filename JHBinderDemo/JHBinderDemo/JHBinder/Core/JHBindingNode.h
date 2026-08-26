@@ -25,6 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 // MARK: - UI Control 专用
 @property (nonatomic, assign) BOOL isUIControl;
 @property (nonatomic, assign) UIControlEvents controlEvent;
+@property (nonatomic, strong, nullable) id lastBroadcastValue; ///< distinct 用：UIControl 上次广播值
 
 /// 节点唯一 ID（格式：targetHash_keyPath），用于 map 中的 key
 @property (nonatomic, copy, readonly) NSString *nodeID;

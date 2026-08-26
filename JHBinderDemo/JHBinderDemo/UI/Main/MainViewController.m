@@ -43,6 +43,8 @@ static NSString * const kCellID = @"MainCell";
            @"class": @"LoginDemoViewController" },
         @{ @"title": @"05  twoWayMap（接收转换 vs 广播原始值）",
            @"class": @"ConvertDemoViewController" },
+        @{ @"title": @"06  v1.2 新特性（fire / debounce / delay / distinct / once）",
+           @"class": @"V12DemoViewController" },
     ];
 }
 

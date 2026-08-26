@@ -13,6 +13,9 @@
 		3F5241C1303EC807002FD6B1 /* JHBindingNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241B7303EC807002FD6B1 /* JHBindingNode.m */; };
 		3F5241C2303EC807002FD6B1 /* JHBinder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241BC303EC807002FD6B1 /* JHBinder.m */; };
 		3F5241C3303EC807002FD6B1 /* JHBindingManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241B5303EC807002FD6B1 /* JHBindingManager.m */; };
+		3F5241E3303EEE26002FD6B1 /* V12DemoModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241DD303EEE26002FD6B1 /* V12DemoModel.m */; };
+		3F5241E4303EEE26002FD6B1 /* V12DemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241E1303EEE26002FD6B1 /* V12DemoViewController.m */; };
+		3F5241E5303EEE26002FD6B1 /* V12DemoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241DF303EEE26002FD6B1 /* V12DemoView.m */; };
 		552AA2CD8BE4E1247F6E4572 /* SliderDemoView.m in Sources */ = {isa = PBXBuildFile; fileRef = BFE3AABAEA2069F911018FBF /* SliderDemoView.m */; };
 		5C0B16D6A4DDE1401C80928D /* TextFieldDemoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 790F251251114C7CAB0A3739 /* TextFieldDemoView.m */; };
 		681C9465C33F8E293CF0FE56 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 2C3BC8CC17D553BF8B5E4FDF /* AppDelegate.m */; };
@@ -51,6 +54,12 @@
 		3F5241BB303EC807002FD6B1 /* JHBinder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JHBinder.h; sourceTree = "<group>"; };
 		3F5241BC303EC807002FD6B1 /* JHBinder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JHBinder.m; sourceTree = "<group>"; };
 		3F5241BD303EC807002FD6B1 /* JHBinderKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JHBinderKit.h; sourceTree = "<group>"; };
+		3F5241DC303EEE26002FD6B1 /* V12DemoModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V12DemoModel.h; sourceTree = "<group>"; };
+		3F5241DD303EEE26002FD6B1 /* V12DemoModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V12DemoModel.m; sourceTree = "<group>"; };
+		3F5241DE303EEE26002FD6B1 /* V12DemoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V12DemoView.h; sourceTree = "<group>"; };
+		3F5241DF303EEE26002FD6B1 /* V12DemoView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V12DemoView.m; sourceTree = "<group>"; };
+		3F5241E0303EEE26002FD6B1 /* V12DemoViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V12DemoViewController.h; sourceTree = "<group>"; };
+		3F5241E1303EEE26002FD6B1 /* V12DemoViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V12DemoViewController.m; sourceTree = "<group>"; };
 		534F8612A71246687A4B1A1B /* LoginDemoView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LoginDemoView.m; sourceTree = "<group>"; };
 		62965A74881BE062827C02DE /* TextFieldDemoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TextFieldDemoView.h; sourceTree = "<group>"; };
 		672FB9A1EDACA979D1D83402 /* MainViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MainViewController.m; sourceTree = "<group>"; };
@@ -182,6 +191,19 @@
 			path = JHBinder;
 			sourceTree = "<group>";
 		};
+		3F5241E2303EEE26002FD6B1 /* V12Demo */ = {
+			isa = PBXGroup;
+			children = (
+				3F5241DC303EEE26002FD6B1 /* V12DemoModel.h */,
+				3F5241DD303EEE26002FD6B1 /* V12DemoModel.m */,
+				3F5241DE303EEE26002FD6B1 /* V12DemoView.h */,
+				3F5241DF303EEE26002FD6B1 /* V12DemoView.m */,
+				3F5241E0303EEE26002FD6B1 /* V12DemoViewController.h */,
+				3F5241E1303EEE26002FD6B1 /* V12DemoViewController.m */,
+			);
+			path = V12Demo;
+			sourceTree = "<group>";
+		};
 		551D0E428E612BA5C5A86380 /* BasicDemo */ = {
 			isa = PBXGroup;
 			children = (
@@ -249,6 +271,7 @@
 		AB431313BBBE99F6C2624B36 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				3F5241E2303EEE26002FD6B1 /* V12Demo */,
 				551D0E428E612BA5C5A86380 /* BasicDemo */,
 				994B5D369FEE7AF377FE63DF /* Common */,
 				27A8BE2A40902D8192C09563 /* ConvertDemo */,
@@ -333,6 +356,9 @@
 				6A18B99CB553886841D5209E /* ConvertDemoModel.m in Sources */,
 				7FB3B7BB6C6D4EC775585DED /* ConvertDemoView.m in Sources */,
 				700608CCB2D8F15FBF3FE011 /* ConvertDemoViewController.m in Sources */,
+				3F5241E3303EEE26002FD6B1 /* V12DemoModel.m in Sources */,
+				3F5241E4303EEE26002FD6B1 /* V12DemoViewController.m in Sources */,
+				3F5241E5303EEE26002FD6B1 /* V12DemoView.m in Sources */,
 				F4F619E623E699E5F94A132D /* LoginDemoView.m in Sources */,
 				3F5241BF303EC807002FD6B1 /* NSObject+JHBind.m in Sources */,
 				3F5241C0303EC807002FD6B1 /* JHBindingGroup.m in Sources */,

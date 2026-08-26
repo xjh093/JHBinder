@@ -22,6 +22,8 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
 @property (nonatomic, strong) NSMutableArray<NSString *> *nodeOrder;
 @property (nonatomic, strong) dispatch_queue_t queue;
 @property (nonatomic, copy, nullable) JHFilterBlock filterBlock;
+/// debounce 待执行 block（主线程操作，无需额外锁）
+@property (nonatomic, strong, nullable) dispatch_block_t pendingDebounceBlock;
 
 @end
 
@@ -203,7 +205,7 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
     // 过滤器拦截
     if (self.filterBlock && !self.filterBlock(oldValue, newValue)) return;
 
-    [self p_broadcastFromNode:sourceNode newValue:newValue];
+    [self p_scheduleBroadcastFromNode:sourceNode newValue:newValue];
 }
 
 // MARK: - UIControl Target-Action 回调
@@ -223,14 +225,59 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
     if (!sourceNode) return;
 
     id newValue = [sender valueForKeyPath:sourceNode.keyPath];
+
+    // distinct：相同值不重复广播（UIControl 路径；KVO 路径已在 observeValueForKeyPath: 内置）
+    if (self.isDistinct) {
+        if (sourceNode.lastBroadcastValue && [sourceNode.lastBroadcastValue isEqual:newValue]) return;
+        sourceNode.lastBroadcastValue = newValue;
+    }
+
     if (self.filterBlock && !self.filterBlock(nil, newValue)) return;
 
-    [self p_broadcastFromNode:sourceNode newValue:newValue];
+    [self p_scheduleBroadcastFromNode:sourceNode newValue:newValue];
 }
 
-// MARK: - 广播
+// MARK: - 广播调度（debounce / delay / 直通）
 
-- (void)p_broadcastFromNode:(JHBindingNode *)sourceNode newValue:(id)newValue {
+- (void)p_scheduleBroadcastFromNode:(JHBindingNode *)sourceNode newValue:(id)newValue {
+    if (self.debounceInterval > 0) {
+        // debounce：取消上次待执行 block，重新计时
+        // pendingDebounceBlock 只在主线程读写，无需额外锁
+        void (^scheduleOnMain)(void) = ^{
+            if (self.pendingDebounceBlock) {
+                dispatch_block_cancel(self.pendingDebounceBlock);
+            }
+            __weak typeof(self) weak = self;
+            dispatch_block_t block = dispatch_block_create(0, ^{
+                weak.pendingDebounceBlock = nil;
+                [weak p_doBroadcastFromNode:sourceNode newValue:newValue];
+            });
+            self.pendingDebounceBlock = block;
+            dispatch_after(
+                dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.debounceInterval * NSEC_PER_SEC)),
+                dispatch_get_main_queue(), block);
+        };
+        [NSThread isMainThread] ? scheduleOnMain() : dispatch_async(dispatch_get_main_queue(), scheduleOnMain);
+        return;
+    }
+
+    if (self.delayInterval > 0) {
+        // delay：每次触发都延迟固定时间，不取消前次
+        __weak typeof(self) weak = self;
+        dispatch_after(
+            dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.delayInterval * NSEC_PER_SEC)),
+            dispatch_get_main_queue(), ^{
+                [weak p_doBroadcastFromNode:sourceNode newValue:newValue];
+            });
+        return;
+    }
+
+    [self p_doBroadcastFromNode:sourceNode newValue:newValue];
+}
+
+// MARK: - 广播执行（原 p_broadcastFromNode，加 once / log）
+
+- (void)p_doBroadcastFromNode:(JHBindingNode *)sourceNode newValue:(id)newValue {
     // 防跨链循环：本组已在广播中则跳过
     @synchronized (sBroadcastingGroupIDs) {
         if ([sBroadcastingGroupIDs containsObject:self.groupID]) return;
@@ -250,6 +297,11 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
 
     // 确保 UI 更新在主线程执行
     void (^broadcastBlock)(void) = ^{
+        // log：广播日志
+        if (self.debugLabel) {
+            NSLog(@"[JHBinder:%@] broadcast  %@ → %@", self.debugLabel, sourceNode.nodeID, newValue);
+        }
+
         for (JHBindingNode *node in snapshot) {
             if (node == sourceNode) continue; // 不回传给来源节点
             if (!(node.direction & JHBindDirectionReceive)) continue;
@@ -272,6 +324,11 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
         @synchronized (sBroadcastingGroupIDs) {
             [sBroadcastingGroupIDs removeObject:self.groupID];
         }
+
+        // once：广播完成后移除所有节点，自动解绑
+        if (self.isOnce) {
+            [self removeAllNodes];
+        }
     };
 
     if ([NSThread isMainThread]) {
@@ -279,6 +336,33 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
     } else {
         dispatch_async(dispatch_get_main_queue(), broadcastBlock);
     }
+}
+
+// MARK: - fire
+
+- (void)fireFromFirstListenNode {
+    // 找插入顺序中第一个有监听能力的节点作为广播源
+    __block JHBindingNode *firstNode = nil;
+    dispatch_sync(self.queue, ^{
+        for (NSString *nodeID in self->_nodeOrder) {
+            JHBindingNode *node = self->_nodeMap[nodeID];
+            if ((node.direction & JHBindDirectionListen) && node.target) {
+                firstNode = node;
+                break;
+            }
+        }
+    });
+    if (!firstNode) return;
+
+    id target = firstNode.target;
+    if (!target) return;
+    id value = [target valueForKeyPath:firstNode.keyPath];
+
+    // 允许 nil 值广播（用 NSNull 占位，接收节点收到 NSNull 时置 nil）
+    if (!value) value = [NSNull null];
+
+    void (^doFire)(void) = ^{ [self p_doBroadcastFromNode:firstNode newValue:value]; };
+    [NSThread isMainThread] ? doFire() : dispatch_async(dispatch_get_main_queue(), doFire);
 }
 
 @end

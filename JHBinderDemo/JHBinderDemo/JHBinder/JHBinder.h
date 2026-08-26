@@ -106,6 +106,15 @@ typedef JHBinder *_Nonnull(^JHBinderObserveBlock)(NSString *key, JHOutBlock hand
 /// 链级广播拦截器：.filter(^BOOL(id old, id new){ return YES/NO; })
 typedef JHBinder *_Nonnull(^JHBinderFilterBlock)(JHFilterBlock filter);
 
+/// 无参数链式操作：.fire()  .distinct()  .once()
+typedef JHBinder *_Nonnull(^JHBinderVoidBlock)(void);
+
+/// 时间间隔操作：.debounce(0.3)  .delay(0.5)
+typedef JHBinder *_Nonnull(^JHBinderIntervalBlock)(NSTimeInterval interval);
+
+/// 标签字符串操作：.log(@"textField")
+typedef JHBinder *_Nonnull(^JHBinderLabelBlock)(NSString *label);
+
 /// 生命周期存储：.store(self.bindings)
 typedef void(^JHBinderStoreBlock)(NSMutableArray *array);
 
@@ -305,6 +314,72 @@ typedef void(^JHBinderStoreBlock)(NSMutableArray *array);
  * 使用 +unbindTarget: / +unbindTarget:keyPath: 显式解绑。
  */
 @property (nonatomic, readonly) JHBinderStoreBlock store;
+
+
+// MARK: - v1.2 新增：广播行为控制
+
+/**
+ * 【即时广播】链建立完成后，立刻用第一个监听节点的当前值广播一次。
+ *
+ * 用法：.fire()
+ *
+ * 适用场景：绑定建立时 label/UI 需要立即显示 model 当前值，
+ * 而不必等到用户操作触发第一次变化。
+ */
+@property (nonatomic, readonly) JHBinderVoidBlock fire;
+
+
+/**
+ * 【去重】UIControl 相同值不重复广播。
+ *
+ * 用法：.distinct()
+ *
+ * KVO 路径已内置此行为，distinct 主要对 UIControl 节点生效。
+ * 适用场景： UISlider 拖动时可能频繁触发相同值，可减少不必要广播。
+ */
+@property (nonatomic, readonly) JHBinderVoidBlock distinct;
+
+
+/**
+ * 【单次触发】首次广播完成后，自动移除所有节点（解绑）。
+ *
+ * 用法：.once()
+ *
+ * 适用场景：只关心一次变化，如加载完成回调、首次登录成功等。
+ * 与 store 配合使用：广播后节点被移除，binder 仍在 array，下次就算 model 变化也不会再广播。
+ */
+@property (nonatomic, readonly) JHBinderVoidBlock once;
+
+
+/**
+ * 【防抖】停止触发后延迟 N 秒广播，连续触发时重置计时器。
+ *
+ * 用法：.debounce(0.3)  // 0.3秒内无再次输入才广播
+ *
+ * 适用场景：搜索框输入联网请求、频繁需要节流的 UIControl 事件。
+ * 注：debounce 优先于 delay，二者同时设置时只生效 debounce。
+ */
+@property (nonatomic, readonly) JHBinderIntervalBlock debounce;
+
+
+/**
+ * 【延迟】每次触发后延迟 N 秒广播，不取消前次。
+ *
+ * 用法：.delay(0.5)  // 每次触发后 0.5 秒广播
+ *
+ * 与 debounce 区别：delay 每次都广播只是延迟；debounce 会噸掉中间快速变化。
+ */
+@property (nonatomic, readonly) JHBinderIntervalBlock delay;
+
+
+/**
+ * 【调试日志】开启广播日志，每次广播打印：[JHBinder:label] nodeID → value。
+ *
+ * 用法：.log(@"textField")
+ *
+ * 建议仅在调试阶段使用，正式上线前移除。
+ */
+@property (nonatomic, readonly) JHBinderLabelBlock log;
 
 
 // MARK: - 显式解绑（全局）
