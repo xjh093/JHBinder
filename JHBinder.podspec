@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "JHBinder"
-  s.version      = "1.0.0"
+  s.version      = "1.0.1"
   s.summary      = "轻量级 KVO + UIControl 数据绑定库，链式 DSL，支持双向/单向绑定、值转换等。"
 
   s.description  = <<~DESC
