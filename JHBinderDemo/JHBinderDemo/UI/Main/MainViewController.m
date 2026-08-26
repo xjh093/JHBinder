@@ -1,0 +1,77 @@
+//
+//  MainViewController.m
+//  JHBinderDemo
+//
+//  Created by Haomissyou on 8/25/26.
+//
+//  示例列表页，点击跳转对应 Demo
+//
+
+#import "MainViewController.h"
+#import "BasicDemoViewController.h"
+#import "TextFieldDemoViewController.h"
+#import "SliderDemoViewController.h"
+#import "LoginDemoViewController.h"
+#import "ConvertDemoViewController.h"
+
+static NSString * const kCellID = @"MainCell";
+
+@interface MainViewController ()
+
+@property (nonatomic, strong) NSArray<NSDictionary *> *items;
+//  每项格式: @{ @"title": @"xxx", @"class": @"XxxViewController" }
+
+@end
+
+@implementation MainViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    self.title = @"JHBinder Demo";
+    [self.tableView registerClass:UITableViewCell.class forCellReuseIdentifier:kCellID];
+    self.tableView.rowHeight = 52;
+
+    self.items = @[
+        @{ @"title": @"01  基础绑定（Model ↔ TextField ↔ Label）",
+           @"class": @"BasicDemoViewController" },
+        @{ @"title": @"02  UITextField + 过滤 + 值转换",
+           @"class": @"TextFieldDemoViewController" },
+        @{ @"title": @"03  UISlider ↔ Label + ProgressView",
+           @"class": @"SliderDemoViewController" },
+        @{ @"title": @"04  MVVM 登录界面",
+           @"class": @"LoginDemoViewController" },
+        @{ @"title": @"05  twoWayMap（接收转换 vs 广播原始值）",
+           @"class": @"ConvertDemoViewController" },
+    ];
+}
+
+// MARK: - UITableViewDataSource
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return self.items.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:kCellID forIndexPath:indexPath];
+    cell.textLabel.text = self.items[indexPath.row][@"title"];
+    cell.textLabel.font = [UIFont systemFontOfSize:14];
+    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+    return cell;
+}
+
+// MARK: - UITableViewDelegate
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+
+    NSString *className = self.items[indexPath.row][@"class"];
+    Class cls = NSClassFromString(className);
+    if (!cls) return;
+
+    UIViewController *vc = [[cls alloc] init];
+    vc.title = [self.items[indexPath.row][@"title"] substringFromIndex:4]; // 去掉序号前缀
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+@end

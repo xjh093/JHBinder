@@ -1,0 +1,568 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		22C56789DE0BB82EA5C76B27 /* MainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 672FB9A1EDACA979D1D83402 /* MainViewController.m */; };
+		3F5241AA303EC0C4002FD6B1 /* JHBinder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241A7303EC0C4002FD6B1 /* JHBinder.m */; };
+		3F5241AB303EC0C4002FD6B1 /* JHBindingNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241A2303EC0C4002FD6B1 /* JHBindingNode.m */; };
+		3F5241AC303EC0C4002FD6B1 /* NSObject+JHBind.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F52419B303EC0C4002FD6B1 /* NSObject+JHBind.m */; };
+		3F5241AD303EC0C4002FD6B1 /* JHBindingGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F52419E303EC0C4002FD6B1 /* JHBindingGroup.m */; };
+		3F5241AE303EC0C4002FD6B1 /* JHBindingManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241A0303EC0C4002FD6B1 /* JHBindingManager.m */; };
+		552AA2CD8BE4E1247F6E4572 /* SliderDemoView.m in Sources */ = {isa = PBXBuildFile; fileRef = BFE3AABAEA2069F911018FBF /* SliderDemoView.m */; };
+		5C0B16D6A4DDE1401C80928D /* TextFieldDemoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 790F251251114C7CAB0A3739 /* TextFieldDemoView.m */; };
+		681C9465C33F8E293CF0FE56 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 2C3BC8CC17D553BF8B5E4FDF /* AppDelegate.m */; };
+		68BA35B83F658A1250C46A38 /* BasicDemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E0A06EB15390FA5DF26FEA00 /* BasicDemoViewController.m */; };
+		6A18B99CB553886841D5209E /* ConvertDemoModel.m in Sources */ = {isa = PBXBuildFile; fileRef = DD7B507AFD336E6F57C32652 /* ConvertDemoModel.m */; };
+		700608CCB2D8F15FBF3FE011 /* ConvertDemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F2D9BDDBA6A2A7E0DED59430 /* ConvertDemoViewController.m */; };
+		712F364ECD88FEED200D3C20 /* RootNavigationController.m in Sources */ = {isa = PBXBuildFile; fileRef = E97420E0A0FEBE80199D88FC /* RootNavigationController.m */; };
+		7FB3B7BB6C6D4EC775585DED /* ConvertDemoView.m in Sources */ = {isa = PBXBuildFile; fileRef = DD3F7FC127C6A049CC7794BA /* ConvertDemoView.m */; };
+		AB77A40CB87FB4AAEE9D58A0 /* SliderDemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B648A0C05FB44EE23214C8FB /* SliderDemoViewController.m */; };
+		B02F75B54B665901A8818E36 /* SliderDemoModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 75053B34612DD5508A459F96 /* SliderDemoModel.m */; };
+		B0BAE0E5739B1A9F7EC22554 /* BasicDemoModel.m in Sources */ = {isa = PBXBuildFile; fileRef = C7B3D0ADC7191DFE0A9B3B34 /* BasicDemoModel.m */; };
+		D0EAC0092DF09A9B62D39AEF /* BasicDemoView.m in Sources */ = {isa = PBXBuildFile; fileRef = D017B51BEF101330D7D468EF /* BasicDemoView.m */; };
+		D2F54016A919A3122E0E8213 /* TextFieldDemoModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 33CA2EC07323AABC82F43AF5 /* TextFieldDemoModel.m */; };
+		D73AC6462B9A70D5A678DF8E /* LoginDemoViewModel.m in Sources */ = {isa = PBXBuildFile; fileRef = AAC4A2851EBC869F1F429104 /* LoginDemoViewModel.m */; };
+		DDDFB04FF1A77CF8E059AC17 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 78C0702D1C65C39DE39DAEAB /* main.m */; };
+		E99B6501AEBED6469961EEB9 /* LoginDemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DC11F63E8ED699839099684 /* LoginDemoViewController.m */; };
+		F3E713CC164E4264593E26E9 /* TextFieldDemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E3B9C708F9460C988753645E /* TextFieldDemoViewController.m */; };
+		F4F619E623E699E5F94A132D /* LoginDemoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 534F8612A71246687A4B1A1B /* LoginDemoView.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0A16DD998B054C9D997E2AD6 /* SliderDemoViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SliderDemoViewController.h; sourceTree = "<group>"; };
+		0F9143E6F8058AAF5CBFDE30 /* SliderDemoModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SliderDemoModel.h; sourceTree = "<group>"; };
+		1A1E2F415742286788A4A931 /* SliderDemoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SliderDemoView.h; sourceTree = "<group>"; };
+		2C3BC8CC17D553BF8B5E4FDF /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		33CA2EC07323AABC82F43AF5 /* TextFieldDemoModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TextFieldDemoModel.m; sourceTree = "<group>"; };
+		3F52419A303EC0C4002FD6B1 /* NSObject+JHBind.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+JHBind.h"; sourceTree = "<group>"; };
+		3F52419B303EC0C4002FD6B1 /* NSObject+JHBind.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+JHBind.m"; sourceTree = "<group>"; };
+		3F52419D303EC0C4002FD6B1 /* JHBindingGroup.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JHBindingGroup.h; sourceTree = "<group>"; };
+		3F52419E303EC0C4002FD6B1 /* JHBindingGroup.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JHBindingGroup.m; sourceTree = "<group>"; };
+		3F52419F303EC0C4002FD6B1 /* JHBindingManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JHBindingManager.h; sourceTree = "<group>"; };
+		3F5241A0303EC0C4002FD6B1 /* JHBindingManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JHBindingManager.m; sourceTree = "<group>"; };
+		3F5241A1303EC0C4002FD6B1 /* JHBindingNode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JHBindingNode.h; sourceTree = "<group>"; };
+		3F5241A2303EC0C4002FD6B1 /* JHBindingNode.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JHBindingNode.m; sourceTree = "<group>"; };
+		3F5241A4303EC0C4002FD6B1 /* JHBinderDefine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JHBinderDefine.h; sourceTree = "<group>"; };
+		3F5241A6303EC0C4002FD6B1 /* JHBinder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JHBinder.h; sourceTree = "<group>"; };
+		3F5241A7303EC0C4002FD6B1 /* JHBinder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JHBinder.m; sourceTree = "<group>"; };
+		3F5241A8303EC0C4002FD6B1 /* JHBinderKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JHBinderKit.h; sourceTree = "<group>"; };
+		534F8612A71246687A4B1A1B /* LoginDemoView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LoginDemoView.m; sourceTree = "<group>"; };
+		62965A74881BE062827C02DE /* TextFieldDemoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TextFieldDemoView.h; sourceTree = "<group>"; };
+		672FB9A1EDACA979D1D83402 /* MainViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MainViewController.m; sourceTree = "<group>"; };
+		6E05BBD8CD4D72833E51123E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		75053B34612DD5508A459F96 /* SliderDemoModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SliderDemoModel.m; sourceTree = "<group>"; };
+		78645D4710F0857879A749A8 /* BasicDemoModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BasicDemoModel.h; sourceTree = "<group>"; };
+		78C0702D1C65C39DE39DAEAB /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		790F251251114C7CAB0A3739 /* TextFieldDemoView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TextFieldDemoView.m; sourceTree = "<group>"; };
+		7DC11F63E8ED699839099684 /* LoginDemoViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LoginDemoViewController.m; sourceTree = "<group>"; };
+		83303767760F9355852F6E45 /* BasicDemoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BasicDemoView.h; sourceTree = "<group>"; };
+		844CA9A1D04DD676CFCBD54B /* TextFieldDemoModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TextFieldDemoModel.h; sourceTree = "<group>"; };
+		846CC02AFD9CEC5D636FDB7C /* TextFieldDemoViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TextFieldDemoViewController.h; sourceTree = "<group>"; };
+		8F46D8CBCC40BD391D01FD40 /* ConvertDemoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConvertDemoView.h; sourceTree = "<group>"; };
+		981ACD17473D06813C3C836F /* ConvertDemoModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConvertDemoModel.h; sourceTree = "<group>"; };
+		A2DD6D50A770ADEF3493F73E /* RootNavigationController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RootNavigationController.h; sourceTree = "<group>"; };
+		AAC4A2851EBC869F1F429104 /* LoginDemoViewModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LoginDemoViewModel.m; sourceTree = "<group>"; };
+		B648A0C05FB44EE23214C8FB /* SliderDemoViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SliderDemoViewController.m; sourceTree = "<group>"; };
+		B77AD36CDDA14F9E6225EE19 /* ConvertDemoViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConvertDemoViewController.h; sourceTree = "<group>"; };
+		BA69A6BCBD5302A57AE7B33C /* MainViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MainViewController.h; sourceTree = "<group>"; };
+		BB7AE7AD0887B388B1C3EE88 /* BasicDemoViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BasicDemoViewController.h; sourceTree = "<group>"; };
+		BFE3AABAEA2069F911018FBF /* SliderDemoView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SliderDemoView.m; sourceTree = "<group>"; };
+		C7A6DB49212EC8BDADA0BE30 /* LoginDemoViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LoginDemoViewController.h; sourceTree = "<group>"; };
+		C7B3D0ADC7191DFE0A9B3B34 /* BasicDemoModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BasicDemoModel.m; sourceTree = "<group>"; };
+		D017B51BEF101330D7D468EF /* BasicDemoView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BasicDemoView.m; sourceTree = "<group>"; };
+		D6116245B8B68C270F27CFDE /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		DD298A75ECEE800613ECA826 /* JHBinderDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JHBinderDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DD3F7FC127C6A049CC7794BA /* ConvertDemoView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ConvertDemoView.m; sourceTree = "<group>"; };
+		DD7B507AFD336E6F57C32652 /* ConvertDemoModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ConvertDemoModel.m; sourceTree = "<group>"; };
+		E0A06EB15390FA5DF26FEA00 /* BasicDemoViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BasicDemoViewController.m; sourceTree = "<group>"; };
+		E3B9C708F9460C988753645E /* TextFieldDemoViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TextFieldDemoViewController.m; sourceTree = "<group>"; };
+		E6DDD1C1AF38F14F3055FB9F /* LoginDemoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LoginDemoView.h; sourceTree = "<group>"; };
+		E97420E0A0FEBE80199D88FC /* RootNavigationController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RootNavigationController.m; sourceTree = "<group>"; };
+		F2D9BDDBA6A2A7E0DED59430 /* ConvertDemoViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ConvertDemoViewController.m; sourceTree = "<group>"; };
+		F5D5EEDB9425D5E690E273F9 /* LoginDemoViewModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LoginDemoViewModel.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		19CBCE4F191E63F8B432E27A /* SliderDemo */ = {
+			isa = PBXGroup;
+			children = (
+				0F9143E6F8058AAF5CBFDE30 /* SliderDemoModel.h */,
+				75053B34612DD5508A459F96 /* SliderDemoModel.m */,
+				1A1E2F415742286788A4A931 /* SliderDemoView.h */,
+				BFE3AABAEA2069F911018FBF /* SliderDemoView.m */,
+				0A16DD998B054C9D997E2AD6 /* SliderDemoViewController.h */,
+				B648A0C05FB44EE23214C8FB /* SliderDemoViewController.m */,
+			);
+			path = SliderDemo;
+			sourceTree = "<group>";
+		};
+		1F045831CF1421309AB8BF4B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DD298A75ECEE800613ECA826 /* JHBinderDemo.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2539DA885426236170FCDA82 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				6E05BBD8CD4D72833E51123E /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		27A8BE2A40902D8192C09563 /* ConvertDemo */ = {
+			isa = PBXGroup;
+			children = (
+				981ACD17473D06813C3C836F /* ConvertDemoModel.h */,
+				DD7B507AFD336E6F57C32652 /* ConvertDemoModel.m */,
+				8F46D8CBCC40BD391D01FD40 /* ConvertDemoView.h */,
+				DD3F7FC127C6A049CC7794BA /* ConvertDemoView.m */,
+				B77AD36CDDA14F9E6225EE19 /* ConvertDemoViewController.h */,
+				F2D9BDDBA6A2A7E0DED59430 /* ConvertDemoViewController.m */,
+			);
+			path = ConvertDemo;
+			sourceTree = "<group>";
+		};
+		2C38F1AE5DCE651899587569 /* Main */ = {
+			isa = PBXGroup;
+			children = (
+				BA69A6BCBD5302A57AE7B33C /* MainViewController.h */,
+				672FB9A1EDACA979D1D83402 /* MainViewController.m */,
+			);
+			path = Main;
+			sourceTree = "<group>";
+		};
+		3F52419C303EC0C4002FD6B1 /* Category */ = {
+			isa = PBXGroup;
+			children = (
+				3F52419A303EC0C4002FD6B1 /* NSObject+JHBind.h */,
+				3F52419B303EC0C4002FD6B1 /* NSObject+JHBind.m */,
+			);
+			path = Category;
+			sourceTree = "<group>";
+		};
+		3F5241A3303EC0C4002FD6B1 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				3F52419D303EC0C4002FD6B1 /* JHBindingGroup.h */,
+				3F52419E303EC0C4002FD6B1 /* JHBindingGroup.m */,
+				3F52419F303EC0C4002FD6B1 /* JHBindingManager.h */,
+				3F5241A0303EC0C4002FD6B1 /* JHBindingManager.m */,
+				3F5241A1303EC0C4002FD6B1 /* JHBindingNode.h */,
+				3F5241A2303EC0C4002FD6B1 /* JHBindingNode.m */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		3F5241A5303EC0C4002FD6B1 /* Define */ = {
+			isa = PBXGroup;
+			children = (
+				3F5241A4303EC0C4002FD6B1 /* JHBinderDefine.h */,
+			);
+			path = Define;
+			sourceTree = "<group>";
+		};
+		3F5241A9303EC0C4002FD6B1 /* JHBinder */ = {
+			isa = PBXGroup;
+			children = (
+				3F52419C303EC0C4002FD6B1 /* Category */,
+				3F5241A3303EC0C4002FD6B1 /* Core */,
+				3F5241A5303EC0C4002FD6B1 /* Define */,
+				3F5241A6303EC0C4002FD6B1 /* JHBinder.h */,
+				3F5241A7303EC0C4002FD6B1 /* JHBinder.m */,
+				3F5241A8303EC0C4002FD6B1 /* JHBinderKit.h */,
+			);
+			path = JHBinder;
+			sourceTree = "<group>";
+		};
+		551D0E428E612BA5C5A86380 /* BasicDemo */ = {
+			isa = PBXGroup;
+			children = (
+				78645D4710F0857879A749A8 /* BasicDemoModel.h */,
+				C7B3D0ADC7191DFE0A9B3B34 /* BasicDemoModel.m */,
+				83303767760F9355852F6E45 /* BasicDemoView.h */,
+				D017B51BEF101330D7D468EF /* BasicDemoView.m */,
+				BB7AE7AD0887B388B1C3EE88 /* BasicDemoViewController.h */,
+				E0A06EB15390FA5DF26FEA00 /* BasicDemoViewController.m */,
+			);
+			path = BasicDemo;
+			sourceTree = "<group>";
+		};
+		6AD6343F11961888F5B5EF1B = {
+			isa = PBXGroup;
+			children = (
+				A7CC2F4145368828BF21DA83 /* JHBinderDemo */,
+				1F045831CF1421309AB8BF4B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		7B15A3092349720876501A62 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				D6116245B8B68C270F27CFDE /* AppDelegate.h */,
+				2C3BC8CC17D553BF8B5E4FDF /* AppDelegate.m */,
+				78C0702D1C65C39DE39DAEAB /* main.m */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		8034C946DC673379ED138FC4 /* LoginDemo */ = {
+			isa = PBXGroup;
+			children = (
+				E6DDD1C1AF38F14F3055FB9F /* LoginDemoView.h */,
+				534F8612A71246687A4B1A1B /* LoginDemoView.m */,
+				C7A6DB49212EC8BDADA0BE30 /* LoginDemoViewController.h */,
+				7DC11F63E8ED699839099684 /* LoginDemoViewController.m */,
+				F5D5EEDB9425D5E690E273F9 /* LoginDemoViewModel.h */,
+				AAC4A2851EBC869F1F429104 /* LoginDemoViewModel.m */,
+			);
+			path = LoginDemo;
+			sourceTree = "<group>";
+		};
+		994B5D369FEE7AF377FE63DF /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				A2DD6D50A770ADEF3493F73E /* RootNavigationController.h */,
+				E97420E0A0FEBE80199D88FC /* RootNavigationController.m */,
+			);
+			path = Common;
+			sourceTree = "<group>";
+		};
+		A7CC2F4145368828BF21DA83 /* JHBinderDemo */ = {
+			isa = PBXGroup;
+			children = (
+				3F5241A9303EC0C4002FD6B1 /* JHBinder */,
+				7B15A3092349720876501A62 /* App */,
+				2539DA885426236170FCDA82 /* Resources */,
+				AB431313BBBE99F6C2624B36 /* UI */,
+			);
+			path = JHBinderDemo;
+			sourceTree = "<group>";
+		};
+		AB431313BBBE99F6C2624B36 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				551D0E428E612BA5C5A86380 /* BasicDemo */,
+				994B5D369FEE7AF377FE63DF /* Common */,
+				27A8BE2A40902D8192C09563 /* ConvertDemo */,
+				8034C946DC673379ED138FC4 /* LoginDemo */,
+				2C38F1AE5DCE651899587569 /* Main */,
+				19CBCE4F191E63F8B432E27A /* SliderDemo */,
+				DB69EC50E886A2DC7669270C /* TextFieldDemo */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		DB69EC50E886A2DC7669270C /* TextFieldDemo */ = {
+			isa = PBXGroup;
+			children = (
+				844CA9A1D04DD676CFCBD54B /* TextFieldDemoModel.h */,
+				33CA2EC07323AABC82F43AF5 /* TextFieldDemoModel.m */,
+				62965A74881BE062827C02DE /* TextFieldDemoView.h */,
+				790F251251114C7CAB0A3739 /* TextFieldDemoView.m */,
+				846CC02AFD9CEC5D636FDB7C /* TextFieldDemoViewController.h */,
+				E3B9C708F9460C988753645E /* TextFieldDemoViewController.m */,
+			);
+			path = TextFieldDemo;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D2274EF26E024ABFBA9E0D6D /* JHBinderDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D8AC5F68908BD8B1A13ABB01 /* Build configuration list for PBXNativeTarget "JHBinderDemo" */;
+			buildPhases = (
+				22A8C9C594F2CC195FB3AA08 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = JHBinderDemo;
+			packageProductDependencies = (
+			);
+			productName = JHBinderDemo;
+			productReference = DD298A75ECEE800613ECA826 /* JHBinderDemo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6E85E55966970063B50D6DEC /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+			};
+			buildConfigurationList = 5E5002DFCD9EDB6A35BE1D74 /* Build configuration list for PBXProject "JHBinderDemo" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 6AD6343F11961888F5B5EF1B;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 1F045831CF1421309AB8BF4B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D2274EF26E024ABFBA9E0D6D /* JHBinderDemo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		22A8C9C594F2CC195FB3AA08 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				681C9465C33F8E293CF0FE56 /* AppDelegate.m in Sources */,
+				B0BAE0E5739B1A9F7EC22554 /* BasicDemoModel.m in Sources */,
+				D0EAC0092DF09A9B62D39AEF /* BasicDemoView.m in Sources */,
+				68BA35B83F658A1250C46A38 /* BasicDemoViewController.m in Sources */,
+				6A18B99CB553886841D5209E /* ConvertDemoModel.m in Sources */,
+				7FB3B7BB6C6D4EC775585DED /* ConvertDemoView.m in Sources */,
+				700608CCB2D8F15FBF3FE011 /* ConvertDemoViewController.m in Sources */,
+				F4F619E623E699E5F94A132D /* LoginDemoView.m in Sources */,
+				3F5241AA303EC0C4002FD6B1 /* JHBinder.m in Sources */,
+				3F5241AB303EC0C4002FD6B1 /* JHBindingNode.m in Sources */,
+				3F5241AC303EC0C4002FD6B1 /* NSObject+JHBind.m in Sources */,
+				3F5241AD303EC0C4002FD6B1 /* JHBindingGroup.m in Sources */,
+				3F5241AE303EC0C4002FD6B1 /* JHBindingManager.m in Sources */,
+				E99B6501AEBED6469961EEB9 /* LoginDemoViewController.m in Sources */,
+				D73AC6462B9A70D5A678DF8E /* LoginDemoViewModel.m in Sources */,
+				22C56789DE0BB82EA5C76B27 /* MainViewController.m in Sources */,
+				712F364ECD88FEED200D3C20 /* RootNavigationController.m in Sources */,
+				B02F75B54B665901A8818E36 /* SliderDemoModel.m in Sources */,
+				552AA2CD8BE4E1247F6E4572 /* SliderDemoView.m in Sources */,
+				AB77A40CB87FB4AAEE9D58A0 /* SliderDemoViewController.m in Sources */,
+				D2F54016A919A3122E0E8213 /* TextFieldDemoModel.m in Sources */,
+				5C0B16D6A4DDE1401C80928D /* TextFieldDemoView.m in Sources */,
+				F3E713CC164E4264593E26E9 /* TextFieldDemoViewController.m in Sources */,
+				DDDFB04FF1A77CF8E059AC17 /* main.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		B45FF4ED6027315D9ED1C5EB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 4YWGN55BE7;
+				ENABLE_BITCODE = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../JHBinder/JHBinder",
+					"$(SRCROOT)/../JHBinder/JHBinder/Define",
+					"$(SRCROOT)/../JHBinder/JHBinder/Category",
+					"$(SRCROOT)/../JHBinder/JHBinder/Core",
+				);
+				INFOPLIST_FILE = JHBinderDemo/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.haomissyou.JHBinderDemo;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "haomissyou-dev-all-d";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		BE69FE978F8C571CAC60341F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 4YWGN55BE7;
+				ENABLE_BITCODE = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../JHBinder/JHBinder",
+					"$(SRCROOT)/../JHBinder/JHBinder/Define",
+					"$(SRCROOT)/../JHBinder/JHBinder/Category",
+					"$(SRCROOT)/../JHBinder/JHBinder/Core",
+				);
+				INFOPLIST_FILE = JHBinderDemo/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.haomissyou.JHBinderDemo;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "haomissyou-dev-all-d";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F781E3D2FE9392259B7C5246 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		FBB3A036A882BDAD751C2055 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		5E5002DFCD9EDB6A35BE1D74 /* Build configuration list for PBXProject "JHBinderDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FBB3A036A882BDAD751C2055 /* Debug */,
+				F781E3D2FE9392259B7C5246 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D8AC5F68908BD8B1A13ABB01 /* Build configuration list for PBXNativeTarget "JHBinderDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BE69FE978F8C571CAC60341F /* Debug */,
+				B45FF4ED6027315D9ED1C5EB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6E85E55966970063B50D6DEC /* Project object */;
+}
