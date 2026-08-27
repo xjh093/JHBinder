@@ -135,6 +135,23 @@ NS_ASSUME_NONNULL_BEGIN
 /// 使用指定值立即广播一次（v1.6 startWith），不依赖节点当前属性值
 - (void)fireFromFirstListenNodeWithValue:(id)value;
 
+
+// MARK: - v1.7 新增配置
+
+/// bufferCount(n)（v1.7）：积累 n 个值后打包为 NSArray 广播，0 = 禁用
+@property (nonatomic, assign) NSUInteger    bufferCountValue;
+
+/// bufferTime(t)（v1.7）：积累 t 秒内的值后打包广播，0 = 禁用
+/// 与 bufferCount 互斥：同时设置时以 bufferCount 为准
+@property (nonatomic, assign) NSTimeInterval bufferTimeInterval;
+
+/// timeout(t, fallback)（v1.7）：t 秒内无广播则自动发出 fallback，0 = 禁用
+@property (nonatomic, assign) NSTimeInterval timeoutInterval;
+@property (nonatomic, strong, nullable)   id timeoutFallback;
+
+/// sample(t)（v1.7）：每隔 t 秒将 lastEffectiveValue 推送到接收节点，0 = 禁用
+@property (nonatomic, assign) NSTimeInterval sampleInterval;
+
 @end
 
 NS_ASSUME_NONNULL_END

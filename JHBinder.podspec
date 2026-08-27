@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "JHBinder"
-  s.version      = "1.6.0"
+  s.version      = "1.7.0"
   s.summary      = "轻量级 KVO + UIControl 数据绑定库，链式 DSL，支持双向绑定、多源合并、辦加器、条件流控、内联副作用等。"
 
   s.description  = <<~DESC
@@ -34,6 +34,14 @@ Pod::Spec.new do |s|
     - 恒定映射：mapTo（总广播同一个值，v1.6）
     - 自定义去重：distinctWhen（自定义相等判断逻辑，v1.6）
     - 条件流控：takeWhile / skipWhile（谓词满足时广播/跳过，v1.6）
+    - 定时器源：interval(t)（类方法，每隔 t 秒广播递增计数，v1.7）
+    - 生命周期控制：takeUntil(signal)（signal 首次广播时自动解绑，v1.7）
+    - 子属性提取：pluck(keyPath)（KVC 提取嵌套属性，v1.7）
+    - 批量打包：bufferCount(n) / bufferTime(t)（按次数或时间窗口打包，v1.7）
+    - 超时降级：timeout(t, fallback)（t 秒无广播自动发出 fallback，v1.7）
+    - 降频采样：sample(t)（每隔 t 秒推送最新值，v1.7）
+    - 实例 combine：combine(other, block)（combineLatest 链式版，v1.7）
+    - 第 N 次响应：elementAt(n)（skip(n-1)+take(1)，v1.7）
     - 自动生命周期：通过 .store(self.bindings) 绑定 VC 生命周期，无需手动解绑
     - 线程安全：并发队列 + barrier 读写分离，主线程广播保证 UI 安全
   DESC

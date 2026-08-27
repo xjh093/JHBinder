@@ -9,6 +9,7 @@
 #import "JHBindingNode.h"
 #import "NSObject+JHBind.h"
 #import "JHMergeRelay.h"
+#import "JHIntervalRelay.h"
 #import <CoreFoundation/CoreFoundation.h>
 
 /// 全局正在广播中的 groupID 集合，用于防跨链循环广播（链1→链2→链1）
@@ -45,6 +46,12 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
     BOOL             _skipWhileActive;        ///< skipWhile 是否仍在跳过阶段
     id               _lastEffectiveValue;     ///< 最近一次广播的有效值（withLatestFrom 采样用）
     NSMutableArray<JHOutBlock> *_tapBlocks;   ///< tap 副作用 block 列表
+    // v1.7 状态
+    NSMutableArray  *_buffer;                 ///< buffer 积累区（bufferCount / bufferTime）
+    dispatch_source_t _bufferTimer;           ///< bufferTime 触发定时器
+    BOOL             _isFlushingBuffer;       ///< flush 中，跳过 buffer 拦截防止循环
+    NSUInteger       _timeoutToken;           ///< timeout 令牌，每次广播递增使旧定时器失效
+    dispatch_source_t _sampleTimer;           ///< sample 周期采样定时器
 }
 @end
 
@@ -71,6 +78,10 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
 }
 
 - (void)dealloc {
+    // v1.7 定时器清理（优先取消，防止 weak 引用在定时器回调中变 nil 前触发）
+    if (_bufferTimer) { dispatch_source_cancel(_bufferTimer); _bufferTimer = nil; }
+    if (_sampleTimer) { dispatch_source_cancel(_sampleTimer); _sampleTimer = nil; }
+    ++_timeoutToken; // 使所有待执行 timeout block 失效
     // 所有 KVO / Target-Action 解绑
     // dealloc 中不需要加锁，此时对象已无其他引用
     for (JHBindingNode *node in _nodeMap.allValues) {
@@ -119,6 +130,10 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
         [self->_nodeMap removeAllObjects];
         [self->_nodeOrder removeAllObjects];
     });
+    // v1.7：停止所有定时器，防止 removeAllNodes 后回调仍触发
+    if (_bufferTimer) { dispatch_source_cancel(_bufferTimer); _bufferTimer = nil; }
+    if (_sampleTimer) { dispatch_source_cancel(_sampleTimer); _sampleTimer = nil; }
+    ++_timeoutToken;
     for (JHBindingNode *node in snapshot.allValues) {
         [self p_stopObservingNode:node];
     }
@@ -206,6 +221,135 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
     id fireValue = value ?: [NSNull null];
     void (^doFire)(void) = ^{ [self p_doBroadcastFromNode:firstNode newValue:fireValue]; };
     [NSThread isMainThread] ? doFire() : dispatch_async(dispatch_get_main_queue(), doFire);
+}
+
+// MARK: - v1.7 自定义 setter 及私有方法
+
+- (void)setTimeoutInterval:(NSTimeInterval)timeoutInterval {
+    _timeoutInterval = timeoutInterval;
+    if (timeoutInterval > 0) [self p_resetTimeoutTimer];
+}
+
+- (void)setSampleInterval:(NSTimeInterval)sampleInterval {
+    _sampleInterval = sampleInterval;
+    if (sampleInterval > 0) [self p_startSampleTimer];
+}
+
+/// 重置超时定时器（每次成功广播后调用）
+- (void)p_resetTimeoutTimer {
+    NSUInteger token = ++self->_timeoutToken;
+    __weak typeof(self) weak = self;
+    dispatch_after(
+        dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.timeoutInterval * NSEC_PER_SEC)),
+        dispatch_get_main_queue(), ^{
+            typeof(self) strong = weak;
+            if (!strong || strong->_timeoutToken != token) return;
+            // 超时：广播 fallback 值
+            __block JHBindingNode *firstNode = nil;
+            dispatch_sync(strong.queue, ^{
+                for (NSString *nid in strong->_nodeOrder) {
+                    JHBindingNode *n = strong->_nodeMap[nid];
+                    if (n.direction & JHBindDirectionListen) { firstNode = n; break; }
+                }
+            });
+            if (firstNode) {
+                [strong p_doBroadcastFromNode:firstNode
+                                     newValue:strong.timeoutFallback ?: [NSNull null]];
+            }
+        });
+}
+
+/// 启动 bufferTime 定时器（在积累首个值时调用）
+- (void)p_scheduleBufferFlushTimer {
+    if (self->_bufferTimer) return;
+    __weak typeof(self) weak = self;
+    dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,
+                                                     dispatch_get_main_queue());
+    dispatch_source_set_timer(timer,
+        dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.bufferTimeInterval * NSEC_PER_SEC)),
+        DISPATCH_TIME_FOREVER, 0);
+    dispatch_source_set_event_handler(timer, ^{
+        typeof(self) strong = weak;
+        if (!strong) { dispatch_source_cancel(timer); return; }
+        dispatch_source_cancel(timer);
+        strong->_bufferTimer = nil;
+        [strong p_flushBuffer];
+    });
+    dispatch_resume(timer);
+    self->_bufferTimer = timer;
+}
+
+/// 冲刷 buffer 并广播
+- (void)p_flushBuffer {
+    if (self->_buffer.count == 0) { self->_buffer = nil; return; }
+    NSArray *batch = [self->_buffer copy];
+    self->_buffer = nil;
+    __block JHBindingNode *firstNode = nil;
+    dispatch_sync(self.queue, ^{
+        for (NSString *nid in self->_nodeOrder) {
+            JHBindingNode *n = self->_nodeMap[nid];
+            if (n) { firstNode = n; break; }
+        }
+    });
+    if (!firstNode) return;
+    self->_isFlushingBuffer = YES;
+    [self p_doBroadcastFromNode:firstNode newValue:batch];
+    self->_isFlushingBuffer = NO;
+}
+
+/// 启动 sample 周期定时器
+- (void)p_startSampleTimer {
+    if (self->_sampleTimer) return;
+    __weak typeof(self) weak = self;
+    dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,
+                                                     dispatch_get_main_queue());
+    uint64_t ns = (uint64_t)(self.sampleInterval * NSEC_PER_SEC);
+    dispatch_source_set_timer(timer, dispatch_time(DISPATCH_TIME_NOW, (int64_t)ns), ns, 0);
+    dispatch_source_set_event_handler(timer, ^{
+        [weak p_sampleFlush];
+    });
+    dispatch_resume(timer);
+    self->_sampleTimer = timer;
+}
+
+/// 直接将 lastEffectiveValue 推送到所有接收节点（跳过 transforms）
+- (void)p_sampleFlush {
+    id value = self->_lastEffectiveValue;
+    if (!value) return;
+    @synchronized (sBroadcastingGroupIDs) {
+        if ([sBroadcastingGroupIDs containsObject:self.groupID]) return;
+        [sBroadcastingGroupIDs addObject:self.groupID];
+    }
+    __block NSArray<JHBindingNode *> *snapshot = nil;
+    dispatch_sync(self.queue, ^{
+        NSMutableArray *arr = [NSMutableArray arrayWithCapacity:self->_nodeOrder.count];
+        for (NSString *nid in self->_nodeOrder) {
+            JHBindingNode *n = self->_nodeMap[nid];
+            if (n) [arr addObject:n];
+        }
+        snapshot = arr.copy;
+    });
+    // tap blocks
+    for (JHOutBlock tapBlock in self->_tapBlocks) { tapBlock(value); }
+    // log
+    if (self.debugLabel) NSLog(@"[JHBinder:%@][sample] %@", self.debugLabel, value);
+    // 节点迭代（跳过 listen 节点，只处理 receive）
+    for (JHBindingNode *node in snapshot) {
+        if (!(node.direction & JHBindDirectionReceive)) continue;
+        if (node.receiveFilterBlock && !node.receiveFilterBlock(value)) continue;
+        id outValue = value;
+        if (node.convertBlock) outValue = node.convertBlock(value);
+        id target = node.target;
+        if (target) {
+            ((NSObject *)target).jh_isUpdating = YES;
+            [target setValue:outValue forKeyPath:node.keyPath];
+            ((NSObject *)target).jh_isUpdating = NO;
+        }
+        if (node.outBlock) node.outBlock(outValue);
+    }
+    @synchronized (sBroadcastingGroupIDs) {
+        [sBroadcastingGroupIDs removeObject:self.groupID];
+    }
 }
 
 // MARK: - 私有：开始/停止观察
@@ -517,8 +661,53 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
             return;
         }
 
+        // ── v1.7 新增步骤 ────────────────────────────────────────────
+
+        // timeout 重置（v1.7）：成功通过所有过滤器后，重置超时计时器
+        if (self.timeoutInterval > 0) {
+            [self p_resetTimeoutTimer];
+        }
+
+        // buffer（v1.7）：积累值；未满时直接返回，等待 bufferCount / bufferTime 触发 flush
+        if (!self->_isFlushingBuffer && (self.bufferCountValue > 0 || self.bufferTimeInterval > 0)) {
+            if (!self->_buffer) self->_buffer = [NSMutableArray array];
+            [self->_buffer addObject:effectiveValue ?: [NSNull null]];
+
+            BOOL shouldFlushNow = (self.bufferCountValue > 0 &&
+                                   self->_buffer.count >= self.bufferCountValue);
+            if (shouldFlushNow) {
+                // bufferCount 满：就地 flush，本次广播继续向下传递 batch 数组
+                effectiveValue = [self->_buffer copy];
+                self->_buffer = nil;
+                if (self->_bufferTimer) {
+                    dispatch_source_cancel(self->_bufferTimer);
+                    self->_bufferTimer = nil;
+                }
+            } else {
+                // 未满：启动（或保持）bufferTime 定时器，然后静默返回
+                if (self.bufferTimeInterval > 0 && !self->_bufferTimer) {
+                    [self p_scheduleBufferFlushTimer];
+                }
+                @synchronized (sBroadcastingGroupIDs) {
+                    [sBroadcastingGroupIDs removeObject:self.groupID];
+                }
+                return;
+            }
+        }
+
+        // ── v1.7 步骤结束 ────────────────────────────────────────────
+
         // 存储最近有效值（v1.6 withLatestFrom 采样用；在 withLatestFrom 包装前存储原始值）
         self->_lastEffectiveValue = effectiveValue;
+
+        // sample 降频（v1.7）：记录最新值后静默返回，由 sampleTimer 定期推送到接收节点
+        // p_sampleFlush 直接迭代接收节点，不会再次进入此分支，不存在循环问题
+        if (self.sampleInterval > 0) {
+            @synchronized (sBroadcastingGroupIDs) {
+                [sBroadcastingGroupIDs removeObject:self.groupID];
+            }
+            return;
+        }
 
         // withLatestFrom（v1.6）：主源触发时，取采样源的最新值合并为 @[primary, sampled]
         if (self.sampleGroup) {

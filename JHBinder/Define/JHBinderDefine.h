@@ -11,8 +11,8 @@
 #import <UIKit/UIKit.h>
 
 // MARK: - 版本号
-#define JHBinderVersionString   @"1.6.0"
-#define JHBinderVersionNumber   0x010600  ///< 高8位Major，中8位Minor，低8位Patch
+#define JHBinderVersionString   @"1.7.0"
+#define JHBinderVersionNumber   0x010700  ///< 高8位Major，中8位Minor，低8位Patch
 
 
 // MARK: - 绑定方向（位掩码）
@@ -107,6 +107,18 @@ typedef id _Nullable (^JHAccumulateBlock)(id _Nullable accumulated, id _Nullable
  * - distinctWhen(comparator)：自定义去重比较器；comparator(old, new) 返回 YES 则视为"相同"跳过
  * - takeWhile(predicate)：满足条件时广播；predicate 首次返回 NO 时自动解绑整条链
  * - skipWhile(predicate)：跳过直到条件首次为 NO；之后所有值都通过
+ *
+ * v1.7.0
+ * -------
+ * - +interval(t)：定时器源；每隔 t 秒广播递增计数（类方法）
+ * - takeUntil(signal)：当信号链首次广播时自动解绑整条链
+ * - pluck(keyPath)：从广播对象中用 KVC 提取子属性值
+ * - bufferCount(n)：积累 n 个值后打包为 NSArray 一次性广播
+ * - bufferTime(t)：积累 t 秒内的所有值后打包广播（与 bufferCount 互补）
+ * - timeout(t, fallback)：若 t 秒内无广播，自动发出 fallback 值
+ * - sample(t)：每隔 t 秒取链中最新值推送到接收节点（降频采样）
+ * - combine(other, block)：combineLatest 的实例方法版，链式风格更友好
+ * - elementAt(n)：只对第 n 次广播响应，之后自动解绑
  */
 
 

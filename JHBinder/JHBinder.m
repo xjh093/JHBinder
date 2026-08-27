@@ -11,6 +11,7 @@
 #import "JHBindingManager.h"
 #import "JHCombineRelay.h"
 #import "JHMergeRelay.h"
+#import "JHIntervalRelay.h"
 #import "NSObject+JHBind.h"
 #import <objc/runtime.h>
 
@@ -555,6 +556,109 @@
         self.group.sampleGroup = other.group;
         // 强持有 other binder，防止过早释放
         objc_setAssociatedObject(self, "_jh_wlf_other", other, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        return self;
+    };
+}
+
+// MARK: - v1.7 类方法：interval
+
++ (JHBinderIntervalBlock)interval {
+    return ^JHBinder *(NSTimeInterval t) {
+        return [JHBinder intervalBinder:t];
+    };
+}
+
++ (JHBinder *)intervalBinder:(NSTimeInterval)interval {
+    JHIntervalRelay *relay = [JHIntervalRelay new];
+    // 用现有 listen 机制监听 relay.tick（KVO）
+    JHBinder *binder = JHBinder.listen(relay, @"tick");
+    // 强持有 relay，使其生命周期与 binder 相同
+    objc_setAssociatedObject(binder, "_jh_interval_relay", relay, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    [relay startWithInterval:interval];
+    return binder;
+}
+
+// MARK: - v1.7 实例操作符
+
+- (JHBinderWithLatestFromBlock)takeUntil {
+    return ^JHBinder *(JHBinder *signal) {
+        __weak JHBindingGroup *weakGroup = self.group;
+        // 在 signal 的 group 上注册一个 receive-only outBlock 节点
+        // 当 signal 广播时，outBlock 触发，解绑当前链
+        static NSUInteger _seqNum = 0;
+        NSString *key = [NSString stringWithFormat:@"_jh_takeUntil_%lu", (unsigned long)++_seqNum];
+        JHBindingNode *node = [JHBindingNode nodeWithOutBlock:^(id __unused v) {
+            JHBindingGroup *strong = weakGroup;
+            [strong removeAllNodes];
+        } key:key];
+        [signal.group addNode:node];
+        // 强持有 signal binder，防止 signal 先于 self 释放
+        objc_setAssociatedObject(self, "_jh_takeUntil_sig", signal, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        return self;
+    };
+}
+
+- (JHBinderPluckBlock)pluck {
+    return ^JHBinder *(NSString *keyPath) {
+        NSString *kp = keyPath;
+        JHConvertBlock existing = self.group.transformBlock;
+        if (existing) {
+            JHConvertBlock captured = existing;
+            self.group.transformBlock = ^id(id v) {
+                id intermediate = captured(v);
+                @try { return [intermediate valueForKeyPath:kp]; }
+                @catch (...) { return nil; }
+            };
+        } else {
+            self.group.transformBlock = ^id(id v) {
+                @try { return [v valueForKeyPath:kp]; }
+                @catch (...) { return nil; }
+            };
+        }
+        return self;
+    };
+}
+
+- (JHBinderCountBlock)bufferCount {
+    return ^JHBinder *(NSUInteger n) {
+        self.group.bufferCountValue = n;
+        return self;
+    };
+}
+
+- (JHBinderIntervalBlock)bufferTime {
+    return ^JHBinder *(NSTimeInterval t) {
+        self.group.bufferTimeInterval = t;
+        return self;
+    };
+}
+
+- (JHBinderTimeoutBlock)timeout {
+    return ^JHBinder *(NSTimeInterval t, id _Nullable fallback) {
+        self.group.timeoutFallback = fallback;
+        self.group.timeoutInterval = t; // setter 内部自动启动计时器
+        return self;
+    };
+}
+
+- (JHBinderIntervalBlock)sample {
+    return ^JHBinder *(NSTimeInterval t) {
+        self.group.sampleInterval = t; // setter 内部自动启动采样定时器
+        return self;
+    };
+}
+
+- (JHBinderCombineBlock)combine {
+    return ^JHBinder *(JHBinder *other, id _Nullable (^combineMap)(NSArray *values)) {
+        return [JHBinder combineLatest:@[self, other] combineMap:combineMap];
+    };
+}
+
+- (JHBinderCountBlock)elementAt {
+    return ^JHBinder *(NSUInteger n) {
+        NSAssert(n >= 1, @"elementAt: n must be >= 1");
+        if (n > 1) self.group.skipCount = n - 1;
+        self.group.takeCount = 1;
         return self;
     };
 }

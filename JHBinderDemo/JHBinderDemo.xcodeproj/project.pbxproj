@@ -24,6 +24,10 @@
 		3F231B94304020C9001E3AB7 /* V16DemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B91304020C9001E3AB7 /* V16DemoViewController.m */; };
 		3F231B95304020C9001E3AB7 /* V16DemoModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B8D304020C9001E3AB7 /* V16DemoModel.m */; };
 		3F231B9830402135001E3AB7 /* JHMergeRelay.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B9730402135001E3AB7 /* JHMergeRelay.m */; };
+		3F231B9F3040348B001E3AB7 /* JHIntervalRelay.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B9E3040348B001E3AB7 /* JHIntervalRelay.m */; };
+		3F231BA7304034A8001E3AB7 /* V17DemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231BA5304034A8001E3AB7 /* V17DemoViewController.m */; };
+		3F231BA8304034A8001E3AB7 /* V17DemoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231BA3304034A8001E3AB7 /* V17DemoView.m */; };
+		3F231BA9304034A8001E3AB7 /* V17DemoModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231BA1304034A8001E3AB7 /* V17DemoModel.m */; };
 		3F5241E3303EEE26002FD6B1 /* V12DemoModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241DD303EEE26002FD6B1 /* V12DemoModel.m */; };
 		3F5241E4303EEE26002FD6B1 /* V12DemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241E1303EEE26002FD6B1 /* V12DemoViewController.m */; };
 		3F5241E5303EEE26002FD6B1 /* V12DemoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241DF303EEE26002FD6B1 /* V12DemoView.m */; };
@@ -90,6 +94,14 @@
 		3F231B91304020C9001E3AB7 /* V16DemoViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V16DemoViewController.m; sourceTree = "<group>"; };
 		3F231B9630402135001E3AB7 /* JHMergeRelay.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JHMergeRelay.h; sourceTree = "<group>"; };
 		3F231B9730402135001E3AB7 /* JHMergeRelay.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JHMergeRelay.m; sourceTree = "<group>"; };
+		3F231B9D3040348B001E3AB7 /* JHIntervalRelay.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JHIntervalRelay.h; sourceTree = "<group>"; };
+		3F231B9E3040348B001E3AB7 /* JHIntervalRelay.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JHIntervalRelay.m; sourceTree = "<group>"; };
+		3F231BA0304034A8001E3AB7 /* V17DemoModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V17DemoModel.h; sourceTree = "<group>"; };
+		3F231BA1304034A8001E3AB7 /* V17DemoModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V17DemoModel.m; sourceTree = "<group>"; };
+		3F231BA2304034A8001E3AB7 /* V17DemoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V17DemoView.h; sourceTree = "<group>"; };
+		3F231BA3304034A8001E3AB7 /* V17DemoView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V17DemoView.m; sourceTree = "<group>"; };
+		3F231BA4304034A8001E3AB7 /* V17DemoViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V17DemoViewController.h; sourceTree = "<group>"; };
+		3F231BA5304034A8001E3AB7 /* V17DemoViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V17DemoViewController.m; sourceTree = "<group>"; };
 		3F5241DC303EEE26002FD6B1 /* V12DemoModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V12DemoModel.h; sourceTree = "<group>"; };
 		3F5241DD303EEE26002FD6B1 /* V12DemoModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V12DemoModel.m; sourceTree = "<group>"; };
 		3F5241DE303EEE26002FD6B1 /* V12DemoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V12DemoView.h; sourceTree = "<group>"; };
@@ -223,6 +235,8 @@
 				3F231B72303FF507001E3AB7 /* JHBindingNode.m */,
 				3F231B73303FF507001E3AB7 /* JHCombineRelay.h */,
 				3F231B74303FF507001E3AB7 /* JHCombineRelay.m */,
+				3F231B9D3040348B001E3AB7 /* JHIntervalRelay.h */,
+				3F231B9E3040348B001E3AB7 /* JHIntervalRelay.m */,
 				3F231B9630402135001E3AB7 /* JHMergeRelay.h */,
 				3F231B9730402135001E3AB7 /* JHMergeRelay.m */,
 			);
@@ -275,6 +289,19 @@
 				3F231B91304020C9001E3AB7 /* V16DemoViewController.m */,
 			);
 			path = V16Demo;
+			sourceTree = "<group>";
+		};
+		3F231BA6304034A8001E3AB7 /* V17Demo */ = {
+			isa = PBXGroup;
+			children = (
+				3F231BA0304034A8001E3AB7 /* V17DemoModel.h */,
+				3F231BA1304034A8001E3AB7 /* V17DemoModel.m */,
+				3F231BA2304034A8001E3AB7 /* V17DemoView.h */,
+				3F231BA3304034A8001E3AB7 /* V17DemoView.m */,
+				3F231BA4304034A8001E3AB7 /* V17DemoViewController.h */,
+				3F231BA5304034A8001E3AB7 /* V17DemoViewController.m */,
+			);
+			path = V17Demo;
 			sourceTree = "<group>";
 		};
 		3F5241E2303EEE26002FD6B1 /* V12Demo */ = {
@@ -370,6 +397,7 @@
 		AB431313BBBE99F6C2624B36 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				3F231BA6304034A8001E3AB7 /* V17Demo */,
 				3F231B92304020C9001E3AB7 /* V16Demo */,
 				3F231B883040107C001E3AB7 /* V15Demo */,
 				3F231B66303FF44B001E3AB7 /* V14Demo */,
@@ -460,6 +488,7 @@
 				D0EAC0092DF09A9B62D39AEF /* BasicDemoView.m in Sources */,
 				68BA35B83F658A1250C46A38 /* BasicDemoViewController.m in Sources */,
 				6A18B99CB553886841D5209E /* ConvertDemoModel.m in Sources */,
+				3F231B9F3040348B001E3AB7 /* JHIntervalRelay.m in Sources */,
 				7FB3B7BB6C6D4EC775585DED /* ConvertDemoView.m in Sources */,
 				700608CCB2D8F15FBF3FE011 /* ConvertDemoViewController.m in Sources */,
 				3F5241E3303EEE26002FD6B1 /* V12DemoModel.m in Sources */,
@@ -491,6 +520,9 @@
 				3F231B9830402135001E3AB7 /* JHMergeRelay.m in Sources */,
 				D2F54016A919A3122E0E8213 /* TextFieldDemoModel.m in Sources */,
 				5C0B16D6A4DDE1401C80928D /* TextFieldDemoView.m in Sources */,
+				3F231BA7304034A8001E3AB7 /* V17DemoViewController.m in Sources */,
+				3F231BA8304034A8001E3AB7 /* V17DemoView.m in Sources */,
+				3F231BA9304034A8001E3AB7 /* V17DemoModel.m in Sources */,
 				F3E713CC164E4264593E26E9 /* TextFieldDemoViewController.m in Sources */,
 				DDDFB04FF1A77CF8E059AC17 /* main.m in Sources */,
 			);

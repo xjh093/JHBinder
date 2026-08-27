@@ -148,6 +148,16 @@ typedef JHBinder *_Nonnull(^JHBinderPredicateBlock)(JHNodeFilterBlock predicate)
 /// withLatestFrom（v1.6）：.withLatestFrom(otherBinder)
 typedef JHBinder *_Nonnull(^JHBinderWithLatestFromBlock)(JHBinder *other);
 
+/// pluck（v1.7）：.pluck(@"data.user.name")  从广播对象用 KVC 提取值
+typedef JHBinder *_Nonnull(^JHBinderPluckBlock)(NSString *keyPath);
+
+/// timeout（v1.7）：.timeout(4.0, @"超时提示")  t 秒无广播则发出 fallback
+typedef JHBinder *_Nonnull(^JHBinderTimeoutBlock)(NSTimeInterval interval, id _Nullable fallback);
+
+/// combine（v1.7）：.combine(other, ^id(NSArray *vs){ return vs; })
+typedef JHBinder *_Nonnull(^JHBinderCombineBlock)(JHBinder *other,
+                                                   id _Nullable (^combineMap)(NSArray *values));
+
 
 // MARK: - JHBinder
 
@@ -494,6 +504,21 @@ typedef JHBinder *_Nonnull(^JHBinderWithLatestFromBlock)(JHBinder *other);
  */
 + (JHBinder *)merge:(NSArray<JHBinder *> *)sources;
 
+/**
+ * 【v1.7 定时器源】每隔 interval 秒广播一次递增的 NSNumber（0, 1, 2…）。
+ *
+ * 用法：
+ *   JHBinder.interval(1.0).take(60).receive(...)  // 每秒触发，共 60 次
+ *   JHBinder.interval(0.5).takeUntil(stopSignal)  // 配合 takeUntil 手动停止
+ *
+ * 注意：定时器随 JHBinder 实例生命周期自动停止（binder store 到 bindings，
+ *   removeAll 时 binder 释放，定时器也随之销毁）。
+ */
+@property (class, nonatomic, readonly) JHBinderIntervalBlock interval;
+
+/// 直接调用版（等价于 JHBinder.interval(t)），方便需要明确方法名的场景
++ (JHBinder *)intervalBinder:(NSTimeInterval)interval;
+
 
 // MARK: - v1.4 新增：广播流控制
 
@@ -751,6 +776,102 @@ typedef JHBinder *_Nonnull(^JHBinderWithLatestFromBlock)(JHBinder *other);
  * 适用场景：搜索框（触发）+ 分类筛选（采样）；提交按钮（触发）+ 表单内容（采样）。
  */
 @property (nonatomic, readonly) JHBinderWithLatestFromBlock withLatestFrom;
+
+
+// MARK: - v1.7 新增操作符
+
+/**
+ * 【takeUntil】当 signal 链首次广播时，自动解绑整条链。
+ *
+ * 用法：
+ *   JHBinder.interval(1.0)
+ *       .takeUntil(stopSignalBinder)   // stopSignalBinder 广播 → ticker 停止
+ *       .receive(...)
+ *       .store(self.bindings);
+ *
+ * 注意：signal binder 由当前 binder 强持有，无需单独 store。
+ * signal 触发后，当前链 removeAllNodes，signal 上的监听节点也同步移除。
+ */
+@property (nonatomic, readonly) JHBinderWithLatestFromBlock takeUntil;
+
+/**
+ * 【pluck】用 KVC keyPath 从广播对象（NSDictionary / 自定义对象）中提取子值。
+ *
+ * 用法：
+ *   .pluck(@"data.user.name")  → 广播值由 dict/obj 变为 name 字符串
+ *
+ * 若 keyPath 不存在或发生异常，广播值为 nil。
+ * 可与其他 transform 链式组合，pluck 相当于一种 transform 语法糖。
+ */
+@property (nonatomic, readonly) JHBinderPluckBlock pluck;
+
+/**
+ * 【bufferCount】积累 n 个值后，打包为 NSArray 一次性广播。
+ *
+ * 用法：
+ *   .bufferCount(3)   // 每攒够 3 个值，向下游广播 @[v1, v2, v3]
+ *
+ * 与 bufferTime 互斥：同时设置时 bufferCount 优先（bufferTime 仅作超时 flush）。
+ */
+@property (nonatomic, readonly) JHBinderCountBlock bufferCount;
+
+/**
+ * 【bufferTime】积累 t 秒内的所有值，到期打包为 NSArray 广播。
+ *
+ * 用法：
+ *   .bufferTime(2.0)   // 每 2 秒将这段时间内的所有值合并为数组广播一次
+ *
+ * 如果 t 内没有值，不广播（静默）。
+ */
+@property (nonatomic, readonly) JHBinderIntervalBlock bufferTime;
+
+/**
+ * 【timeout】若 t 秒内没有收到新广播，自动向下游发出 fallback 值。
+ *
+ * 用法：
+ *   .timeout(5.0, @"⏰ 连接超时")   // 5 秒无响应 → 标签显示超时提示
+ *
+ * 每次成功广播后自动重置计时器；fallback 广播后计时器重新启动（循环超时）。
+ * 如需只触发一次，配合 .take(1) / .once 使用。
+ */
+@property (nonatomic, readonly) JHBinderTimeoutBlock timeout;
+
+/**
+ * 【sample】每隔 t 秒，把最近一次有效广播值重新推送到接收节点（降频采样）。
+ *
+ * 用法：
+ *   .sample(1.0)   // 无论源广播多频繁，UI 最多每秒更新一次
+ *
+ * sample 直接将 lastEffectiveValue（已变换后的值）推送接收节点，
+ * 不再重新执行 transform/biMap/scan 等管道，避免重复计算。
+ */
+@property (nonatomic, readonly) JHBinderIntervalBlock sample;
+
+/**
+ * 【combine】combineLatest 的实例方法版本；更易于链式组合。
+ *
+ * 用法：
+ *   JHBinder *combined =
+ *       JHBinder.listen(self.model, @"a")
+ *               .combine(JHBinder.listen(self.model, @"b"),
+ *                        ^id(NSArray *vs){ return [vs[0] stringByAppendingString:vs[1]]; });
+ *   combined.receive(label, @"text").store(self.bindings);
+ *
+ * 等价于 [JHBinder combineLatest:@[binderA, binderB] combineMap:block]。
+ * 返回值是新的 combined binder，需要继续在其上调用 .receive / .store。
+ */
+@property (nonatomic, readonly) JHBinderCombineBlock combine;
+
+/**
+ * 【elementAt】只对第 n 次广播响应（1-based），之后自动解绑。
+ *
+ * 用法：
+ *   .elementAt(3)   // 忽略前 2 次，第 3 次广播后解绑
+ *
+ * 等价于 .skip(n-1).take(1)；
+ * 适合"只响应第一次确认"、"第三次才触发"等场景。
+ */
+@property (nonatomic, readonly) JHBinderCountBlock elementAt;
 
 
 // MARK: - 显式解绑（全局）
