@@ -139,6 +139,15 @@ typedef JHBinder *_Nonnull(^JHBinderScanBlock)(id _Nullable initialValue, JHAccu
 /// 双向映射（v1.5）：.biMap(forward, backward)
 typedef JHBinder *_Nonnull(^JHBinderBiMapBlock)(JHConvertBlock forward, JHConvertBlock backward);
 
+/// 内联副作用（v1.6）：.tap(^(id v){ ... })
+typedef JHBinder *_Nonnull(^JHBinderTapBlock)(JHOutBlock tapHandler);
+
+/// 谓词流控（v1.6）：.takeWhile(^BOOL(id v){ ... })  .skipWhile(^BOOL(id v){ ... })
+typedef JHBinder *_Nonnull(^JHBinderPredicateBlock)(JHNodeFilterBlock predicate);
+
+/// withLatestFrom（v1.6）：.withLatestFrom(otherBinder)
+typedef JHBinder *_Nonnull(^JHBinderWithLatestFromBlock)(JHBinder *other);
+
 
 // MARK: - JHBinder
 
@@ -464,6 +473,28 @@ typedef JHBinder *_Nonnull(^JHBinderBiMapBlock)(JHConvertBlock forward, JHConver
                  combineMap:(id _Nullable (^)(NSArray *values))combineBlock;
 
 
+// MARK: - v1.6 新增：merge
+
+/**
+ * 【多源合并】任意一个源广播时，透传其值向下游广播。
+ *
+ * 用法：
+ *   [JHBinder merge:@[
+ *       JHBinder.listen(modelA, @"fieldA"),
+ *       JHBinder.listen(modelB, @"fieldB"),
+ *   ]]
+ *   .observe(@"any", ^(id v){ ... })
+ *   .store(self.bindings);
+ *
+ * 与 combineLatest 的区别：
+ *   - combineLatest：等所有源都有值后，把最新快照合并为数组广播
+ *   - merge：任一源触发，直接透传该源的值（不等待其他源）
+ *
+ * 适用场景：多个输入源触发同一个下游处理逻辑（如多字段变化→统一表单校验）。
+ */
++ (JHBinder *)merge:(NSArray<JHBinder *> *)sources;
+
+
 // MARK: - v1.4 新增：广播流控制
 
 /**
@@ -605,6 +636,121 @@ typedef JHBinder *_Nonnull(^JHBinderBiMapBlock)(JHConvertBlock forward, JHConver
  * 适用场景：模型存 NSNumber、UI 展示 NSString，需要双向自动转换。
  */
 @property (nonatomic, readonly) JHBinderBiMapBlock biMap;
+
+
+// MARK: - v1.6 流控扩展
+
+/**
+ * 【初始值广播】绑定建立后立即广播指定值，不依赖节点的当前属性值。
+ *
+ * 区别于 fire()：fire 读取第一个监听节点的当前属性值；startWith 使用你指定的值。
+ *
+ * 用法：.startWith(@"加载中...")
+ *
+ * 适用场景：UI 初始状态与模型初始值不同时；或模型属性尚未赋值但 UI 需要先显示占位内容。
+ */
+@property (nonatomic, readonly) JHBinderDefaultBlock startWith;
+
+
+/**
+ * 【内联副作用】链中途执行 block，不消费、不修改广播值，链继续向下传播。
+ *
+ * 用法：.tap(^(id v){ [Analytics track:@"event" value:v]; })
+ *
+ * 与 observe 的区别：
+ *   - observe 是终端节点，接收广播并展示/处理结果
+ *   - tap 是中间节点，用于埋点、日志等副作用，不影响后续节点
+ *
+ * 可在同一链中多次调用，按添加顺序依次执行。
+ */
+@property (nonatomic, readonly) JHBinderTapBlock tap;
+
+
+/**
+ * 【布尔取反】将广播值作为 BOOL 取反后传递给所有接收节点。
+ *
+ * 用法：.negate()
+ *   等价于 .transform(^id(id v){ return @(![v boolValue]); })
+ *
+ * 适用场景：model.isLoading = YES → button.enabled = NO（最常见的反向绑定）。
+ */
+@property (nonatomic, readonly) JHBinderVoidBlock negate;
+
+
+/**
+ * 【恒定映射】无论源值是什么，接收节点总收到同一个固定值。
+ *
+ * 用法：.mapTo(@YES)
+ *   等价于 .transform(^id(id _){ return @YES; })
+ *
+ * 适用场景：把任意变化信号转换为一个固定的触发信号；或统一多个不同值到同一标志。
+ */
+@property (nonatomic, readonly) JHBinderDefaultBlock mapTo;
+
+
+/**
+ * 【自定义去重比较器】使用自定义逻辑判断两个值是否"相同"，相同则跳过广播。
+ *
+ * 用法：.distinctWhen(^BOOL(id old, id new){ return [old isEqualToString:new ignoreCase:YES]; })
+ *   comparator 返回 YES → 视为相同 → 跳过；返回 NO → 视为不同 → 广播
+ *
+ * 与 distinct() 的区别：distinct 使用 isEqual；distinctWhen 允许自定义相等逻辑。
+ *
+ * 适用场景：忽略大小写的字符串比较、数值在容差范围内视为相等、自定义模型对象比较。
+ */
+@property (nonatomic, readonly) JHBinderFilterBlock distinctWhen;
+
+
+/**
+ * 【满足条件时广播】每次广播前检查谓词；谓词首次返回 NO 时，该值不广播并自动解绑整条链。
+ *
+ * 用法：.takeWhile(^BOOL(id v){ return [v intValue] < 10; })
+ *
+ * 行为：
+ *   谓词返回 YES → 正常广播
+ *   谓词首次返回 NO → 不广播该值，同时 removeAllNodes（自动解绑）
+ *
+ * 适用场景：重试计数不超过 N 次、进度未完成时持续更新、倒计时归零时停止。
+ */
+@property (nonatomic, readonly) JHBinderPredicateBlock takeWhile;
+
+
+/**
+ * 【跳过直到条件不满足】谓词返回 YES 期间跳过所有广播；首次返回 NO 后恢复正常（不可逆）。
+ *
+ * 用法：.skipWhile(^BOOL(id v){ return [(NSArray *)v count] == 0; })
+ *
+ * 行为：
+ *   谓词返回 YES → 跳过广播（不解绑）
+ *   谓词首次返回 NO → 进入正常广播，之后忽略谓词
+ *
+ * 适用场景：数据加载完成前忽略所有变化、首次满足条件后持续响应。
+ */
+@property (nonatomic, readonly) JHBinderPredicateBlock skipWhile;
+
+
+/**
+ * 【触发+采样】主源触发时，取 other 的最新值，合并为 @[primaryValue, sampledValue]。
+ *
+ * 用法：
+ *   JHBinder *categoryBinder = JHBinder.listen(self.model, @"category");
+ *
+ *   JHBinder
+ *       .listen(self.model, @"keyword")
+ *       .debounce(0.3)
+ *       .withLatestFrom(categoryBinder)
+ *       .observe(@"search", ^(id pair) {
+ *           NSArray *p = pair;  // p[0]=keyword, p[1]=latestCategory
+ *           [self p_searchKeyword:p[0] category:p[1]];
+ *       })
+ *       .store(self.bindings);
+ *   // categoryBinder 由 withLatestFrom 强持有，无需单独 store
+ *
+ * 注意：other 的首次采样值在其第一次广播后才有效；首次广播前采样结果为 NSNull。
+ *
+ * 适用场景：搜索框（触发）+ 分类筛选（采样）；提交按钮（触发）+ 表单内容（采样）。
+ */
+@property (nonatomic, readonly) JHBinderWithLatestFromBlock withLatestFrom;
 
 
 // MARK: - 显式解绑（全局）

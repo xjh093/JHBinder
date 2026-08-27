@@ -51,6 +51,8 @@ static NSString * const kCellID = @"MainCell";
            @"class": @"V14DemoViewController" },
         @{ @"title": @"09  v1.5 新特性（transform / scan / withPrevious）",
            @"class": @"V15DemoViewController" },
+        @{ @"title": @"10  v1.6 新特性（merge / withLatestFrom / startWith / tap / negate / mapTo / distinctWhen / takeWhile / skipWhile）",
+           @"class": @"V16DemoViewController" },
     ];
 }
 

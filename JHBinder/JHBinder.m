@@ -10,6 +10,7 @@
 #import "JHBindingNode.h"
 #import "JHBindingManager.h"
 #import "JHCombineRelay.h"
+#import "JHMergeRelay.h"
 #import "NSObject+JHBind.h"
 #import <objc/runtime.h>
 
@@ -453,6 +454,109 @@
     objc_setAssociatedObject(combineBinder, @"_jh_relay",   relay,   OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
     return combineBinder;
+}
+
+
+// MARK: - v1.6 新增：merge
+
++ (JHBinder *)merge:(NSArray<JHBinder *> *)sources {
+    NSAssert(sources.count > 0, @"JHBinder.merge: sources 不能为空");
+
+    // 创建一个轻量中转对象：任意源触发时把值写入 relay.result，
+    // merge binder KVO 监听 relay.result，任一源发射即广播
+    JHMergeRelay *relay = [JHMergeRelay new];
+
+    for (NSUInteger i = 0; i < sources.count; i++) {
+        JHBinder *source = sources[i];
+        __weak JHMergeRelay *weakRelay = relay;
+        NSString *key = [NSString stringWithFormat:@"_jh_merge_%lu", (unsigned long)i];
+        JHBindingNode *node = [JHBindingNode nodeWithOutBlock:^(id _Nullable value) {
+            weakRelay.result = value;
+        } key:key];
+        [source.group addNode:node];
+    }
+
+    // merge binder 监听 relay.result
+    JHBinder *mergeBinder = [JHBinder p_newBinder];
+    JHBindingNode *listenNode = [[JHBindingNode alloc] initWithTarget:relay
+                                                              keyPath:@"result"
+                                                            direction:JHBindDirectionListen
+                                                         convertBlock:nil];
+    [mergeBinder p_addNode:listenNode];
+
+    // 强持有 sources 和 relay，保证生命周期
+    objc_setAssociatedObject(mergeBinder, @"_jh_merge_sources", sources, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(mergeBinder, @"_jh_merge_relay",   relay,   OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
+    return mergeBinder;
+}
+
+
+// MARK: - v1.6 流控扩展
+
+- (JHBinderDefaultBlock)startWith {
+    return ^JHBinder *(id value) {
+        [self.group fireFromFirstListenNodeWithValue:value];
+        return self;
+    };
+}
+
+- (JHBinderTapBlock)tap {
+    return ^JHBinder *(JHOutBlock handler) {
+        [self.group addTapBlock:handler];
+        return self;
+    };
+}
+
+- (JHBinderVoidBlock)negate {
+    return ^JHBinder *{
+        JHConvertBlock existing = self.group.transformBlock;
+        if (existing) {
+            JHConvertBlock captured = existing;
+            self.group.transformBlock = ^id(id v){ return @(![captured(v) boolValue]); };
+        } else {
+            self.group.transformBlock = ^id(id v){ return @(![v boolValue]); };
+        }
+        return self;
+    };
+}
+
+- (JHBinderDefaultBlock)mapTo {
+    return ^JHBinder *(id value) {
+        self.group.transformBlock = ^id(id __unused v){ return value; };
+        return self;
+    };
+}
+
+- (JHBinderFilterBlock)distinctWhen {
+    return ^JHBinder *(JHFilterBlock comparator) {
+        self.group.isDistinct = YES;
+        self.group.distinctComparatorBlock = comparator;
+        return self;
+    };
+}
+
+- (JHBinderPredicateBlock)takeWhile {
+    return ^JHBinder *(JHNodeFilterBlock predicate) {
+        self.group.takeWhileBlock = predicate;
+        return self;
+    };
+}
+
+- (JHBinderPredicateBlock)skipWhile {
+    return ^JHBinder *(JHNodeFilterBlock predicate) {
+        self.group.skipWhileBlock = predicate;
+        return self;
+    };
+}
+
+- (JHBinderWithLatestFromBlock)withLatestFrom {
+    return ^JHBinder *(JHBinder *other) {
+        self.group.sampleGroup = other.group;
+        // 强持有 other binder，防止过早释放
+        objc_setAssociatedObject(self, "_jh_wlf_other", other, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        return self;
+    };
 }
 
 @end

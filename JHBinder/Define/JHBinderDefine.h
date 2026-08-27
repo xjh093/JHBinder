@@ -11,8 +11,8 @@
 #import <UIKit/UIKit.h>
 
 // MARK: - 版本号
-#define JHBinderVersionString   @"1.5.0"
-#define JHBinderVersionNumber   0x010500  ///< 高8位Major，中8位Minor，低8位Patch
+#define JHBinderVersionString   @"1.6.0"
+#define JHBinderVersionNumber   0x010600  ///< 高8位Major，中8位Minor，低8位Patch
 
 
 // MARK: - 绑定方向（位掩码）
@@ -95,6 +95,18 @@ typedef id _Nullable (^JHAccumulateBlock)(id _Nullable accumulated, id _Nullable
  * - scan(initial, accumulator)：累加器；每次广播基于上次结果和当前值生成新值，适合计数/求和/拼接
  * - withPrevious()：双值打包；接收节点收到 @[prevValue, newValue]，适合展示变化过程
  * - biMap(forward, backward)：双向映射；模型→UI 用 forward，UI→模型 用 backward，消除手动两次转换的冷代码
+ *
+ * v1.6.0
+ * -------
+ * - merge(sources)：多源合并；任一源广播时透传其值，适合"任意字段变化→触发统一回调"
+ * - withLatestFrom(other)：触发+采样；主源触发时取 other 最新值合并为 @[主值, 采样值]
+ * - startWith(value)：绑定建立后立即广播指定初始值（区别于 fire：fire 用当前属性值）
+ * - tap(block)：内联副作用；链中途执行 block 但不消费/修改值，链继续向下传播
+ * - negate()：布尔取反快捷方式；等价于 transform(^id(id v){ return @(![v boolValue]); })
+ * - mapTo(value)：恒定映射；无论源值是什么，接收节点总收到同一个 value
+ * - distinctWhen(comparator)：自定义去重比较器；comparator(old, new) 返回 YES 则视为"相同"跳过
+ * - takeWhile(predicate)：满足条件时广播；predicate 首次返回 NO 时自动解绑整条链
+ * - skipWhile(predicate)：跳过直到条件首次为 NO；之后所有值都通过
  */
 
 

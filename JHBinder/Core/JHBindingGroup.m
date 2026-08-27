@@ -8,6 +8,7 @@
 #import "JHBindingGroup.h"
 #import "JHBindingNode.h"
 #import "NSObject+JHBind.h"
+#import "JHMergeRelay.h"
 #import <CoreFoundation/CoreFoundation.h>
 
 /// 全局正在广播中的 groupID 集合，用于防跨链循环广播（链1→链2→链1）
@@ -40,6 +41,10 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
     BOOL             _throttleWindowActive;   ///< 后沿模式下窗口是否正在运行    // v1.5 状态
     id               _scanAccumulated;        ///< scan 累加器当前値
     id               _previousBroadcastValue; ///< withPrevious 上次广播値
+    // v1.6 状态
+    BOOL             _skipWhileActive;        ///< skipWhile 是否仍在跳过阶段
+    id               _lastEffectiveValue;     ///< 最近一次广播的有效值（withLatestFrom 采样用）
+    NSMutableArray<JHOutBlock> *_tapBlocks;   ///< tap 副作用 block 列表
 }
 @end
 
@@ -170,6 +175,39 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
     _scanAccumulated = scanInitialValue; // 设置时同步初始化累加器
 }
 
+// MARK: - v1.6 自定义 setter 及新增方法
+
+- (void)setSkipWhileBlock:(JHNodeFilterBlock)skipWhileBlock {
+    _skipWhileBlock = [skipWhileBlock copy];
+    _skipWhileActive = YES; // 初始处于"跳过"状态，直到谓词首次返回 NO
+}
+
+- (id)lastEffectiveValue {
+    return _lastEffectiveValue;
+}
+
+- (void)addTapBlock:(JHOutBlock)tapBlock {
+    if (!_tapBlocks) _tapBlocks = [NSMutableArray array];
+    [_tapBlocks addObject:[tapBlock copy]];
+}
+
+- (void)fireFromFirstListenNodeWithValue:(id)value {
+    __block JHBindingNode *firstNode = nil;
+    dispatch_sync(self.queue, ^{
+        for (NSString *nodeID in self->_nodeOrder) {
+            JHBindingNode *node = self->_nodeMap[nodeID];
+            if (node.direction & JHBindDirectionListen) {
+                firstNode = node;
+                break;
+            }
+        }
+    });
+    if (!firstNode) return;
+    id fireValue = value ?: [NSNull null];
+    void (^doFire)(void) = ^{ [self p_doBroadcastFromNode:firstNode newValue:fireValue]; };
+    [NSThread isMainThread] ? doFire() : dispatch_async(dispatch_get_main_queue(), doFire);
+}
+
 // MARK: - 私有：开始/停止观察
 
 - (void)p_startObservingNode:(JHBindingNode *)node {
@@ -232,8 +270,13 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
     id oldValue = change[NSKeyValueChangeOldKey];
     id newValue = change[NSKeyValueChangeNewKey];
 
-    // 值未变化，跳过
-    if (oldValue && newValue && [oldValue isEqual:newValue]) return;
+    // 值未变化，跳过（v1.6：支持自定义比较器）
+    if (oldValue && newValue) {
+        BOOL equal = self.distinctComparatorBlock
+            ? self.distinctComparatorBlock(oldValue, newValue)
+            : [oldValue isEqual:newValue];
+        if (equal) return;
+    }
 
     // 过滤器拦截
     if (self.filterBlock && !self.filterBlock(oldValue, newValue)) return;
@@ -260,8 +303,12 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
     id newValue = [sender valueForKeyPath:sourceNode.keyPath];
 
     // distinct：相同值不重复广播（UIControl 路径；KVO 路径已在 observeValueForKeyPath: 内置）
-    if (self.isDistinct) {
-        if (sourceNode.lastBroadcastValue && [sourceNode.lastBroadcastValue isEqual:newValue]) return;
+    if (self.isDistinct || self.distinctComparatorBlock) {
+        id prevValue = sourceNode.lastBroadcastValue;
+        BOOL equal = self.distinctComparatorBlock
+            ? (prevValue ? self.distinctComparatorBlock(prevValue, newValue) : NO)
+            : (prevValue && [prevValue isEqual:newValue]);
+        if (equal) return;
         sourceNode.lastBroadcastValue = newValue;
     }
 
@@ -447,6 +494,45 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
             self->_previousBroadcastValue = effectiveValue; // 先更新，安全
             effectiveValue = @[prev, effectiveValue];
         }
+
+        // ── v1.6 新增步骤 ────────────────────────────────────────────
+
+        // skipWhile（v1.6）：谓词返回 YES 时跳过广播；首次 NO 后永久激活
+        if (self.skipWhileBlock && self->_skipWhileActive) {
+            if (self.skipWhileBlock(effectiveValue)) {
+                @synchronized (sBroadcastingGroupIDs) {
+                    [sBroadcastingGroupIDs removeObject:self.groupID];
+                }
+                return;
+            }
+            self->_skipWhileActive = NO; // 首次不满足 → 解除跳过状态
+        }
+
+        // takeWhile（v1.6）：谓词返回 NO 时，本值不广播，并自动解绑整条链
+        if (self.takeWhileBlock && !self.takeWhileBlock(effectiveValue)) {
+            @synchronized (sBroadcastingGroupIDs) {
+                [sBroadcastingGroupIDs removeObject:self.groupID];
+            }
+            [self removeAllNodes];
+            return;
+        }
+
+        // 存储最近有效值（v1.6 withLatestFrom 采样用；在 withLatestFrom 包装前存储原始值）
+        self->_lastEffectiveValue = effectiveValue;
+
+        // withLatestFrom（v1.6）：主源触发时，取采样源的最新值合并为 @[primary, sampled]
+        if (self.sampleGroup) {
+            id sampled = self.sampleGroup->_lastEffectiveValue ?: [NSNull null];
+            effectiveValue = @[effectiveValue, sampled];
+        }
+
+        // tap blocks（v1.6）：内联副作用，不修改 effectiveValue
+        for (JHOutBlock tapBlock in self->_tapBlocks) {
+            tapBlock(effectiveValue);
+        }
+
+        // ── v1.6 步骤结束 ────────────────────────────────────────────
+
         // log：广播日志
         if (self.debugLabel) {
             NSLog(@"[JHBinder:%@] broadcast  %@ → %@", self.debugLabel, sourceNode.nodeID, effectiveValue);

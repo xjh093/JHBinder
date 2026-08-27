@@ -20,6 +20,10 @@
 		3F231B893040107C001E3AB7 /* V15DemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B873040107C001E3AB7 /* V15DemoViewController.m */; };
 		3F231B8A3040107C001E3AB7 /* V15DemoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B853040107C001E3AB7 /* V15DemoView.m */; };
 		3F231B8B3040107C001E3AB7 /* V15DemoModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B833040107C001E3AB7 /* V15DemoModel.m */; };
+		3F231B93304020C9001E3AB7 /* V16DemoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B8F304020C9001E3AB7 /* V16DemoView.m */; };
+		3F231B94304020C9001E3AB7 /* V16DemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B91304020C9001E3AB7 /* V16DemoViewController.m */; };
+		3F231B95304020C9001E3AB7 /* V16DemoModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B8D304020C9001E3AB7 /* V16DemoModel.m */; };
+		3F231B9830402135001E3AB7 /* JHMergeRelay.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B9730402135001E3AB7 /* JHMergeRelay.m */; };
 		3F5241E3303EEE26002FD6B1 /* V12DemoModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241DD303EEE26002FD6B1 /* V12DemoModel.m */; };
 		3F5241E4303EEE26002FD6B1 /* V12DemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241E1303EEE26002FD6B1 /* V12DemoViewController.m */; };
 		3F5241E5303EEE26002FD6B1 /* V12DemoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241DF303EEE26002FD6B1 /* V12DemoView.m */; };
@@ -78,6 +82,14 @@
 		3F231B853040107C001E3AB7 /* V15DemoView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V15DemoView.m; sourceTree = "<group>"; };
 		3F231B863040107C001E3AB7 /* V15DemoViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V15DemoViewController.h; sourceTree = "<group>"; };
 		3F231B873040107C001E3AB7 /* V15DemoViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V15DemoViewController.m; sourceTree = "<group>"; };
+		3F231B8C304020C9001E3AB7 /* V16DemoModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V16DemoModel.h; sourceTree = "<group>"; };
+		3F231B8D304020C9001E3AB7 /* V16DemoModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V16DemoModel.m; sourceTree = "<group>"; };
+		3F231B8E304020C9001E3AB7 /* V16DemoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V16DemoView.h; sourceTree = "<group>"; };
+		3F231B8F304020C9001E3AB7 /* V16DemoView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V16DemoView.m; sourceTree = "<group>"; };
+		3F231B90304020C9001E3AB7 /* V16DemoViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V16DemoViewController.h; sourceTree = "<group>"; };
+		3F231B91304020C9001E3AB7 /* V16DemoViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V16DemoViewController.m; sourceTree = "<group>"; };
+		3F231B9630402135001E3AB7 /* JHMergeRelay.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JHMergeRelay.h; sourceTree = "<group>"; };
+		3F231B9730402135001E3AB7 /* JHMergeRelay.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JHMergeRelay.m; sourceTree = "<group>"; };
 		3F5241DC303EEE26002FD6B1 /* V12DemoModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V12DemoModel.h; sourceTree = "<group>"; };
 		3F5241DD303EEE26002FD6B1 /* V12DemoModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V12DemoModel.m; sourceTree = "<group>"; };
 		3F5241DE303EEE26002FD6B1 /* V12DemoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V12DemoView.h; sourceTree = "<group>"; };
@@ -211,6 +223,8 @@
 				3F231B72303FF507001E3AB7 /* JHBindingNode.m */,
 				3F231B73303FF507001E3AB7 /* JHCombineRelay.h */,
 				3F231B74303FF507001E3AB7 /* JHCombineRelay.m */,
+				3F231B9630402135001E3AB7 /* JHMergeRelay.h */,
+				3F231B9730402135001E3AB7 /* JHMergeRelay.m */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -248,6 +262,19 @@
 				3F231B873040107C001E3AB7 /* V15DemoViewController.m */,
 			);
 			path = V15Demo;
+			sourceTree = "<group>";
+		};
+		3F231B92304020C9001E3AB7 /* V16Demo */ = {
+			isa = PBXGroup;
+			children = (
+				3F231B8C304020C9001E3AB7 /* V16DemoModel.h */,
+				3F231B8D304020C9001E3AB7 /* V16DemoModel.m */,
+				3F231B8E304020C9001E3AB7 /* V16DemoView.h */,
+				3F231B8F304020C9001E3AB7 /* V16DemoView.m */,
+				3F231B90304020C9001E3AB7 /* V16DemoViewController.h */,
+				3F231B91304020C9001E3AB7 /* V16DemoViewController.m */,
+			);
+			path = V16Demo;
 			sourceTree = "<group>";
 		};
 		3F5241E2303EEE26002FD6B1 /* V12Demo */ = {
@@ -343,6 +370,7 @@
 		AB431313BBBE99F6C2624B36 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				3F231B92304020C9001E3AB7 /* V16Demo */,
 				3F231B883040107C001E3AB7 /* V15Demo */,
 				3F231B66303FF44B001E3AB7 /* V14Demo */,
 				3F5241EC303FD45F002FD6B1 /* V13Demo */,
@@ -426,6 +454,9 @@
 			files = (
 				681C9465C33F8E293CF0FE56 /* AppDelegate.m in Sources */,
 				B0BAE0E5739B1A9F7EC22554 /* BasicDemoModel.m in Sources */,
+				3F231B93304020C9001E3AB7 /* V16DemoView.m in Sources */,
+				3F231B94304020C9001E3AB7 /* V16DemoViewController.m in Sources */,
+				3F231B95304020C9001E3AB7 /* V16DemoModel.m in Sources */,
 				D0EAC0092DF09A9B62D39AEF /* BasicDemoView.m in Sources */,
 				68BA35B83F658A1250C46A38 /* BasicDemoViewController.m in Sources */,
 				6A18B99CB553886841D5209E /* ConvertDemoModel.m in Sources */,
@@ -457,6 +488,7 @@
 				3F231B7F303FF507001E3AB7 /* JHBindingManager.m in Sources */,
 				3F231B80303FF507001E3AB7 /* JHCombineRelay.m in Sources */,
 				3F231B81303FF507001E3AB7 /* JHBindingGroup.m in Sources */,
+				3F231B9830402135001E3AB7 /* JHMergeRelay.m in Sources */,
 				D2F54016A919A3122E0E8213 /* TextFieldDemoModel.m in Sources */,
 				5C0B16D6A4DDE1401C80928D /* TextFieldDemoView.m in Sources */,
 				F3E713CC164E4264593E26E9 /* TextFieldDemoViewController.m in Sources */,

@@ -108,6 +108,33 @@ NS_ASSUME_NONNULL_BEGIN
 /// 首次广播时 prevValue 为 NSNull
 @property (nonatomic, assign) BOOL isWithPrevious;
 
+
+// MARK: - v1.6 新增配置
+
+/// 自定义去重比较器（v1.6）：comparator(old, new) 返回 YES 则视为"相同"，跳过广播
+/// 同时隐式启用 distinct 模式（覆盖 isDistinct 的默认 isEqual 比较）
+@property (nonatomic, copy, nullable) JHFilterBlock distinctComparatorBlock;
+
+/// takeWhile 谓词（v1.6）：每次广播前检查；谓词返回 NO 时不广播该值，并自动解绑整条链
+@property (nonatomic, copy, nullable) JHNodeFilterBlock takeWhileBlock;
+
+/// skipWhile 谓词（v1.6）：谓词返回 YES 时跳过广播；首次返回 NO 后进入正常广播状态（不可逆）
+@property (nonatomic, copy, nullable) JHNodeFilterBlock skipWhileBlock;
+
+/// 采样源组（v1.6 withLatestFrom）：主源触发时读取此组的 lastEffectiveValue，合并为 @[primary, sampled]
+/// strong 引用确保采样源生命周期不短于本组
+@property (nonatomic, strong, nullable) JHBindingGroup *sampleGroup;
+
+/// 本组最近一次广播的有效值（v1.6）：在 withPrevious 打包前存储，供其他组采样（withLatestFrom）
+@property (nonatomic, strong, readonly, nullable) id lastEffectiveValue;
+
+/// 添加一个内联副作用 block（v1.6 tap）；可多次调用，按添加顺序依次执行
+/// tap block 在所有值变换之后、节点迭代之前执行，不影响 effectiveValue
+- (void)addTapBlock:(JHOutBlock)tapBlock;
+
+/// 使用指定值立即广播一次（v1.6 startWith），不依赖节点当前属性值
+- (void)fireFromFirstListenNodeWithValue:(id)value;
+
 @end
 
 NS_ASSUME_NONNULL_END
