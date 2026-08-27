@@ -11,8 +11,8 @@
 #import <UIKit/UIKit.h>
 
 // MARK: - 版本号
-#define JHBinderVersionString   @"1.4.0"
-#define JHBinderVersionNumber   0x010400  ///< 高8位Major，中8位Minor，低8位Patch
+#define JHBinderVersionString   @"1.5.0"
+#define JHBinderVersionNumber   0x010500  ///< 高8位Major，中8位Minor，低8位Patch
 
 
 // MARK: - 绑定方向（位掩码）
@@ -44,6 +44,9 @@ typedef BOOL (^JHNodeFilterBlock)(id _Nullable value);
 
 /// 输出回调：接收广播时触发
 typedef void (^JHOutBlock)(id _Nullable value);
+
+/// 累加器函数（v1.5）：基于上次结果和当前値返回新的累加结果
+typedef id _Nullable (^JHAccumulateBlock)(id _Nullable accumulated, id _Nullable newValue);
 
 
 // MARK: - 版本历史
@@ -84,6 +87,14 @@ typedef void (^JHOutBlock)(id _Nullable value);
  * - throttle(t)：节流，窗口期 t 秒内只放行第一次广播（前沿触发，JHThrottleModeLead）
  * - throttleTrailing(t)：前沿 + 后沿；第一次立即通过，窗口结束时补发最后被压制的值
  * - throttleTrailingOnly(t)：后沿触发；窗口开始计时，结束时发出最后一个值
+ *
+ * v1.5.0
+ * -------
+ * - transform(block)：链级全局值变换；广播前对整条链的值统一处理（作用于所有接收节点）
+ *   区别于 nodeMap：nodeMap 只作用于单个节点
+ * - scan(initial, accumulator)：累加器；每次广播基于上次结果和当前值生成新值，适合计数/求和/拼接
+ * - withPrevious()：双值打包；接收节点收到 @[prevValue, newValue]，适合展示变化过程
+ * - biMap(forward, backward)：双向映射；模型→UI 用 forward，UI→模型 用 backward，消除手动两次转换的冷代码
  */
 
 

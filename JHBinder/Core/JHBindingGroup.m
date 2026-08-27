@@ -37,7 +37,9 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
     id               _throttlePendingValue;   ///< 窗口期内最新被压制的值
     __weak JHBindingNode *_throttlePendingNode; ///< 对应节点（weak，防止循环引用）
     NSUInteger       _throttleTrailingToken;  ///< 令牌，每次新窗口递增，使过期定时器失效
-    BOOL             _throttleWindowActive;   ///< 后沿模式下窗口是否正在运行
+    BOOL             _throttleWindowActive;   ///< 后沿模式下窗口是否正在运行    // v1.5 状态
+    id               _scanAccumulated;        ///< scan 累加器当前値
+    id               _previousBroadcastValue; ///< withPrevious 上次广播値
 }
 @end
 
@@ -161,6 +163,11 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
 - (void)setTakeCount:(NSUInteger)takeCount {
     _takeCount = takeCount;
     _takeRemaining = takeCount;
+}
+
+- (void)setScanInitialValue:(id)scanInitialValue {
+    _scanInitialValue = scanInitialValue;
+    _scanAccumulated = scanInitialValue; // 设置时同步初始化累加器
 }
 
 // MARK: - 私有：开始/停止观察
@@ -414,7 +421,32 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
         if (self.defaultValue && (!effectiveValue || [effectiveValue isKindOfClass:[NSNull class]])) {
             effectiveValue = self.defaultValue;
         }
+        // transform（v1.5）：链级全局値变换
+        if (self.transformBlock) {
+            effectiveValue = self.transformBlock(effectiveValue);
+        }
 
+        // biMap（v1.5）：根据广播源的类型选择方向
+        //   sourceNode.isUIControl == YES  → UI 层输入 → 应用 backward（将 UI 値转为模型値）
+        //   sourceNode.isUIControl == NO   → 模型/KVO 改变 → 应用 forward（将模型値转为 UI 値）
+        if (sourceNode.isUIControl && self.biMapBackwardBlock) {
+            effectiveValue = self.biMapBackwardBlock(effectiveValue);
+        } else if (!sourceNode.isUIControl && self.biMapForwardBlock) {
+            effectiveValue = self.biMapForwardBlock(effectiveValue);
+        }
+
+        // scan（v1.5）：累加器
+        if (self.scanBlock) {
+            self->_scanAccumulated = self.scanBlock(self->_scanAccumulated, effectiveValue);
+            effectiveValue = self->_scanAccumulated;
+        }
+
+        // withPrevious（v1.5）：双値打包
+        if (self.isWithPrevious) {
+            id prev = self->_previousBroadcastValue ?: [NSNull null];
+            self->_previousBroadcastValue = effectiveValue; // 先更新，安全
+            effectiveValue = @[prev, effectiveValue];
+        }
         // log：广播日志
         if (self.debugLabel) {
             NSLog(@"[JHBinder:%@] broadcast  %@ → %@", self.debugLabel, sourceNode.nodeID, effectiveValue);

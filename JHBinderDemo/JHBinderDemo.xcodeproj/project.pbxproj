@@ -17,6 +17,9 @@
 		3F231B7F303FF507001E3AB7 /* JHBindingManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B70303FF507001E3AB7 /* JHBindingManager.m */; };
 		3F231B80303FF507001E3AB7 /* JHCombineRelay.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B74303FF507001E3AB7 /* JHCombineRelay.m */; };
 		3F231B81303FF507001E3AB7 /* JHBindingGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B6E303FF507001E3AB7 /* JHBindingGroup.m */; };
+		3F231B893040107C001E3AB7 /* V15DemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B873040107C001E3AB7 /* V15DemoViewController.m */; };
+		3F231B8A3040107C001E3AB7 /* V15DemoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B853040107C001E3AB7 /* V15DemoView.m */; };
+		3F231B8B3040107C001E3AB7 /* V15DemoModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F231B833040107C001E3AB7 /* V15DemoModel.m */; };
 		3F5241E3303EEE26002FD6B1 /* V12DemoModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241DD303EEE26002FD6B1 /* V12DemoModel.m */; };
 		3F5241E4303EEE26002FD6B1 /* V12DemoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241E1303EEE26002FD6B1 /* V12DemoViewController.m */; };
 		3F5241E5303EEE26002FD6B1 /* V12DemoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3F5241DF303EEE26002FD6B1 /* V12DemoView.m */; };
@@ -69,6 +72,12 @@
 		3F231B78303FF507001E3AB7 /* JHBinder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JHBinder.h; sourceTree = "<group>"; };
 		3F231B79303FF507001E3AB7 /* JHBinder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JHBinder.m; sourceTree = "<group>"; };
 		3F231B7A303FF507001E3AB7 /* JHBinderKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JHBinderKit.h; sourceTree = "<group>"; };
+		3F231B823040107C001E3AB7 /* V15DemoModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V15DemoModel.h; sourceTree = "<group>"; };
+		3F231B833040107C001E3AB7 /* V15DemoModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V15DemoModel.m; sourceTree = "<group>"; };
+		3F231B843040107C001E3AB7 /* V15DemoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V15DemoView.h; sourceTree = "<group>"; };
+		3F231B853040107C001E3AB7 /* V15DemoView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V15DemoView.m; sourceTree = "<group>"; };
+		3F231B863040107C001E3AB7 /* V15DemoViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V15DemoViewController.h; sourceTree = "<group>"; };
+		3F231B873040107C001E3AB7 /* V15DemoViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V15DemoViewController.m; sourceTree = "<group>"; };
 		3F5241DC303EEE26002FD6B1 /* V12DemoModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V12DemoModel.h; sourceTree = "<group>"; };
 		3F5241DD303EEE26002FD6B1 /* V12DemoModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = V12DemoModel.m; sourceTree = "<group>"; };
 		3F5241DE303EEE26002FD6B1 /* V12DemoView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = V12DemoView.h; sourceTree = "<group>"; };
@@ -228,6 +237,19 @@
 			path = ../JHBinder;
 			sourceTree = SOURCE_ROOT;
 		};
+		3F231B883040107C001E3AB7 /* V15Demo */ = {
+			isa = PBXGroup;
+			children = (
+				3F231B823040107C001E3AB7 /* V15DemoModel.h */,
+				3F231B833040107C001E3AB7 /* V15DemoModel.m */,
+				3F231B843040107C001E3AB7 /* V15DemoView.h */,
+				3F231B853040107C001E3AB7 /* V15DemoView.m */,
+				3F231B863040107C001E3AB7 /* V15DemoViewController.h */,
+				3F231B873040107C001E3AB7 /* V15DemoViewController.m */,
+			);
+			path = V15Demo;
+			sourceTree = "<group>";
+		};
 		3F5241E2303EEE26002FD6B1 /* V12Demo */ = {
 			isa = PBXGroup;
 			children = (
@@ -321,6 +343,7 @@
 		AB431313BBBE99F6C2624B36 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				3F231B883040107C001E3AB7 /* V15Demo */,
 				3F231B66303FF44B001E3AB7 /* V14Demo */,
 				3F5241EC303FD45F002FD6B1 /* V13Demo */,
 				3F5241E2303EEE26002FD6B1 /* V12Demo */,
@@ -415,6 +438,9 @@
 				E99B6501AEBED6469961EEB9 /* LoginDemoViewController.m in Sources */,
 				D73AC6462B9A70D5A678DF8E /* LoginDemoViewModel.m in Sources */,
 				22C56789DE0BB82EA5C76B27 /* MainViewController.m in Sources */,
+				3F231B893040107C001E3AB7 /* V15DemoViewController.m in Sources */,
+				3F231B8A3040107C001E3AB7 /* V15DemoView.m in Sources */,
+				3F231B8B3040107C001E3AB7 /* V15DemoModel.m in Sources */,
 				3F231B67303FF44B001E3AB7 /* V14DemoModel.m in Sources */,
 				3F231B68303FF44B001E3AB7 /* V14DemoViewController.m in Sources */,
 				3F231B69303FF44B001E3AB7 /* V14DemoView.m in Sources */,

@@ -85,6 +85,29 @@ NS_ASSUME_NONNULL_BEGIN
 /// - JHThrottleModeTrail：仅在窗口结束时发出最后一个值
 @property (nonatomic, assign) JHThrottleMode throttleMode;
 
+
+// MARK: - v1.5 新增配置
+
+/// 链级全局値变换（v1.5）：在 defaultValue 替换之后、所有节点迭代之前统一对 effectiveValue 做变换
+/// 区别于 nodeMap：nodeMap 只作用于单个节点，transformBlock 作用于所有节点
+@property (nonatomic, copy, nullable) JHConvertBlock transformBlock;
+
+/// 双向映射 — 向前块（v1.5）：model/KVO 源节点广播时应用（模型 → UI）
+@property (nonatomic, copy, nullable) JHConvertBlock biMapForwardBlock;
+
+/// 双向映射 — 向后块（v1.5）：UIControl 源节点广播时应用（UI → 模型）
+@property (nonatomic, copy, nullable) JHConvertBlock biMapBackwardBlock;
+
+/// 累加器函数（v1.5）：每次广播时基于上次累加値和当前値生成新値。与 scanInitialValue 配合使用
+@property (nonatomic, copy, nullable) JHAccumulateBlock scanBlock;
+
+/// scan 初始値（v1.5）：设置时同时初始化累加器内部状态
+@property (nonatomic, strong, nullable) id scanInitialValue;
+
+/// 双値打包（v1.5）：广播时将上次广播値和当前値打包为 @[prevValue, newValue]
+/// 首次广播时 prevValue 为 NSNull
+@property (nonatomic, assign) BOOL isWithPrevious;
+
 @end
 
 NS_ASSUME_NONNULL_END

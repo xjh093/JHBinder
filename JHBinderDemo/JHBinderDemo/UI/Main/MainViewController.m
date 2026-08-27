@@ -49,6 +49,8 @@ static NSString * const kCellID = @"MainCell";
            @"class": @"V13DemoViewController" },
         @{ @"title": @"08  v1.4 新特性（defaultValue / skip / take / throttle）",
            @"class": @"V14DemoViewController" },
+        @{ @"title": @"09  v1.5 新特性（transform / scan / withPrevious）",
+           @"class": @"V15DemoViewController" },
     ];
 }
 

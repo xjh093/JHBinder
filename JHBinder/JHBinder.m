@@ -371,6 +371,38 @@
     };
 }
 
+// MARK: - v1.5 值变换扩展
+
+- (JHBinderTransformBlock)transform {
+    return ^JHBinder *(JHConvertBlock convert) {
+        self.group.transformBlock = convert;
+        return self;
+    };
+}
+
+- (JHBinderScanBlock)scan {
+    return ^JHBinder *(id initialValue, JHAccumulateBlock accumulator) {
+        self.group.scanInitialValue = initialValue;
+        self.group.scanBlock = accumulator;
+        return self;
+    };
+}
+
+- (JHBinderVoidBlock)withPrevious {
+    return ^JHBinder *{
+        self.group.isWithPrevious = YES;
+        return self;
+    };
+}
+
+- (JHBinderBiMapBlock)biMap {
+    return ^JHBinder *(JHConvertBlock forward, JHConvertBlock backward) {
+        self.group.biMapForwardBlock  = forward;
+        self.group.biMapBackwardBlock = backward;
+        return self;
+    };
+}
+
 - (JHBinderNodeMapBlock)nodeMap {
     return ^JHBinder *(JHConvertBlock convert) {
         self.lastReceiveNode.convertBlock = convert;

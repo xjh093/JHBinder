@@ -130,6 +130,15 @@ typedef JHBinder *_Nonnull(^JHBinderDefaultBlock)(id _Nullable value);
 /// 跳过/次数限制（v1.4）：.skip(1)  .take(3)
 typedef JHBinder *_Nonnull(^JHBinderCountBlock)(NSUInteger count);
 
+/// 链级值变换（v1.5）：.transform(^id(id v){ return ...; })
+typedef JHBinder *_Nonnull(^JHBinderTransformBlock)(JHConvertBlock convert);
+
+/// 累加器（v1.5）：.scan(@0, ^id(id acc, id val){ return ...; })
+typedef JHBinder *_Nonnull(^JHBinderScanBlock)(id _Nullable initialValue, JHAccumulateBlock accumulator);
+
+/// 双向映射（v1.5）：.biMap(forward, backward)
+typedef JHBinder *_Nonnull(^JHBinderBiMapBlock)(JHConvertBlock forward, JHConvertBlock backward);
+
 
 // MARK: - JHBinder
 
@@ -536,6 +545,66 @@ typedef JHBinder *_Nonnull(^JHBinderCountBlock)(NSUInteger count);
  * 适用场景：需要限制更新频率且不希望首个就触发的场景。
  */
 @property (nonatomic, readonly) JHBinderIntervalBlock throttleTrailingOnly;
+
+
+// MARK: - v1.5 值变换扩展
+
+/**
+ * 【链级值变换】广播前对整条链的值统一转换，作用于所有接收节点。
+ *
+ * 用法：.transform(^id(id v){ return [v uppercaseString]; })
+ *
+ * 与 nodeMap 区别：nodeMap 只对紧接其后的单个 receive 节点生效；
+ *   transform 对链内所有节点生效（相当于"链前置 map"）。
+ *
+ * 适用场景：全局格式化（如统一大写）、类型转换（如 NSNumber→NSString）。
+ */
+@property (nonatomic, readonly) JHBinderTransformBlock transform;
+
+
+/**
+ * 【累加器】每次广播时基于上次累加结果和当前值生成新值。
+ *
+ * 用法：.scan(@0, ^id(id acc, id val){ return @([acc intValue] + [val length]); })
+ *
+ * 行为：
+ *   第1次广播 "hi"   → accumulator(@0, "hi")     = @2   → 接收节点收到 @2
+ *   第2次广播 "hello" → accumulator(@2, "hello") = @7   → 接收节点收到 @7
+ *
+ * 适用场景：累计输入字数、历史状态追踪、事件计数。
+ */
+@property (nonatomic, readonly) JHBinderScanBlock scan;
+
+
+/**
+ * 【双值打包】广播时将上一次广播值和当前值打包为数组 @[prevValue, newValue]。
+ *
+ * 用法：.withPrevious()
+ *   接收节点：.observe(@"key", ^(id pair){ NSArray *p=pair; NSLog(@"%@ → %@", p[0], p[1]); })
+ *
+ * 首次广播时 prevValue 为 NSNull。
+ *
+ * 适用场景：展示"从 X 变为 Y"、差值计算、变化方向判断。
+ */
+@property (nonatomic, readonly) JHBinderVoidBlock withPrevious;
+
+
+/**
+ * 【双向映射】对同一条链定义两个方向的转换：模型→UI（forward）和 UI→模型（backward）。
+ *
+ * 用法：
+ *   .biMap(
+ *       ^id(id v){ return [v stringValue]; },    // forward:  NSNumber → NSString（模型→UI）
+ *       ^id(id v){ return @([v intValue]); }      // backward: NSString → NSNumber（UI→模型）
+ *   )
+ *
+ * 应用规则：
+ *   - 广播源为 KVO（模型属性变化） → 应用 forward
+ *   - 广播源为 UIControl（用户输入） → 应用 backward
+ *
+ * 适用场景：模型存 NSNumber、UI 展示 NSString，需要双向自动转换。
+ */
+@property (nonatomic, readonly) JHBinderBiMapBlock biMap;
 
 
 // MARK: - 显式解绑（全局）

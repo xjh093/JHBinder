@@ -1,8 +1,8 @@
 Pod::Spec.new do |s|
 
   s.name         = "JHBinder"
-  s.version      = "1.4.0"
-  s.summary      = "轻量级 KVO + UIControl 数据绑定库，链式 DSL，支持双向/单向绑定、值转换、防抖、延迟等。"
+  s.version      = "1.5.0"
+  s.summary      = "轻量级 KVO + UIControl 数据绑定库，链式 DSL，支持双向/单向绑定、值变换、累加器、双值打包、双向映射等。"
 
   s.description  = <<~DESC
     JHBinder 是一个轻量级 iOS 数据绑定库，基于 KVO 和 UIControl Target-Action 实现。
@@ -19,6 +19,13 @@ Pod::Spec.new do |s|
     - 节点级 map：nodeMap（每个 receive 独立转换，v1.3）
     - 节点级 filter：nodeFilter（跳过单个节点而不丢弃整条链，v1.3）
     - 多源合并：combineLatest（任意源发射时合并最新快照，v1.3）
+    - 默认值：defaultValue（nil/NSNull 替换为指定值，v1.4）
+    - 跳过/限次：skip / take（前 N 次跳过 / 只广播 N 次后自动解绑，v1.4）
+    - 节流：throttle / throttleTrailing / throttleTrailingOnly（前沿/前后沿/后沿三种模式，v1.4）
+    - 链级变换：transform（广播前对整条链的值统一转换，v1.5）
+    - 累加器：scan（基于上次结果和当前值生成新值，v1.5）
+    - 双值打包：withPrevious（接收节点收到 @[prevValue, newValue]，v1.5）
+    - 双向映射：biMap（模型→UI 用 forward，UI→模型 用 backward，v1.5）
     - 自动生命周期：通过 .store(self.bindings) 绑定 VC 生命周期，无需手动解绑
     - 线程安全：并发队列 + barrier 读写分离，主线程广播保证 UI 安全
   DESC
