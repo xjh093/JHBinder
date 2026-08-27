@@ -8,6 +8,7 @@
 #import "JHBindingGroup.h"
 #import "JHBindingNode.h"
 #import "NSObject+JHBind.h"
+#import <CoreFoundation/CoreFoundation.h>
 
 /// 全局正在广播中的 groupID 集合，用于防跨链循环广播（链1→链2→链1）
 /// 支持多链嵌套场景
@@ -25,6 +26,19 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
 /// debounce 待执行 block（主线程操作，无需额外锁）
 @property (nonatomic, strong, nullable) dispatch_block_t pendingDebounceBlock;
 
+@end
+
+// MARK: - v1.4 私有状态（主线程读写，无需额外锁）
+@interface JHBindingGroup () {
+    NSUInteger       _skipRemaining;          ///< skip 剩余次数
+    NSUInteger       _takeRemaining;          ///< take 剩余次数
+    CFAbsoluteTime   _throttleLastFireTime;   ///< throttle 上次广播时间戳
+    // 后沿节流状态
+    id               _throttlePendingValue;   ///< 窗口期内最新被压制的值
+    __weak JHBindingNode *_throttlePendingNode; ///< 对应节点（weak，防止循环引用）
+    NSUInteger       _throttleTrailingToken;  ///< 令牌，每次新窗口递增，使过期定时器失效
+    BOOL             _throttleWindowActive;   ///< 后沿模式下窗口是否正在运行
+}
 @end
 
 @implementation JHBindingGroup
@@ -137,6 +151,18 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
     _filterBlock = [filterBlock copy];
 }
 
+// MARK: - v1.4 自定义 setter（初始化剩余计数器）
+
+- (void)setSkipCount:(NSUInteger)skipCount {
+    _skipCount = skipCount;
+    _skipRemaining = skipCount;
+}
+
+- (void)setTakeCount:(NSUInteger)takeCount {
+    _takeCount = takeCount;
+    _takeRemaining = takeCount;
+}
+
 // MARK: - 私有：开始/停止观察
 
 - (void)p_startObservingNode:(JHBindingNode *)node {
@@ -237,9 +263,86 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
     [self p_scheduleBroadcastFromNode:sourceNode newValue:newValue];
 }
 
-// MARK: - 广播调度（debounce / delay / 直通）
+// MARK: - 广播调度（throttle / debounce / delay / 直通）
 
 - (void)p_scheduleBroadcastFromNode:(JHBindingNode *)sourceNode newValue:(id)newValue {
+    if (self.throttleInterval > 0) {
+        void (^onMain)(void) = ^{
+            switch (self.throttleMode) {
+
+                case JHThrottleModeLead: {
+                    // 前沿：窗口内第一次立即通过，后续丢弃
+                    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+                    if (now - self->_throttleLastFireTime < self.throttleInterval) return;
+                    self->_throttleLastFireTime = now;
+                    [self p_scheduleAfterThrottle:sourceNode newValue:newValue];
+                    break;
+                }
+
+                case JHThrottleModeLeadTrail: {
+                    // 前沿 + 后沿：第一次立即通过；窗口内更新待发值；窗口结束时补发最后一个值
+                    if (!self->_throttleWindowActive) {
+                        self->_throttleWindowActive = YES;
+                        NSUInteger token = ++self->_throttleTrailingToken;
+                        self->_throttlePendingValue = nil;
+                        self->_throttlePendingNode = nil;
+                        [self p_scheduleAfterThrottle:sourceNode newValue:newValue]; // leading
+                        [self p_scheduleTrailingWithToken:token];
+                    } else {
+                        // 窗口期内更新待发值
+                        self->_throttlePendingValue = newValue;
+                        self->_throttlePendingNode = sourceNode;
+                    }
+                    break;
+                }
+
+                case JHThrottleModeTrail: {
+                    // 后沿：窗口开始计时，结束时只发最后一个值
+                    if (!self->_throttleWindowActive) {
+                        self->_throttleWindowActive = YES;
+                        NSUInteger token = ++self->_throttleTrailingToken;
+                        self->_throttlePendingValue = newValue;
+                        self->_throttlePendingNode = sourceNode;
+                        [self p_scheduleTrailingWithToken:token];
+                    } else {
+                        self->_throttlePendingValue = newValue;
+                        self->_throttlePendingNode = sourceNode;
+                    }
+                    break;
+                }
+            }
+        };
+        [NSThread isMainThread] ? onMain() : dispatch_async(dispatch_get_main_queue(), onMain);
+        return;
+    }
+
+    [self p_scheduleAfterThrottle:sourceNode newValue:newValue];
+}
+
+/// 后沿定时器：窗口结束时尝试补发最后被压制的值
+- (void)p_scheduleTrailingWithToken:(NSUInteger)token {
+    __weak typeof(self) weak = self;
+    dispatch_after(
+        dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.throttleInterval * NSEC_PER_SEC)),
+        dispatch_get_main_queue(), ^{
+            JHBindingGroup *strongSelf = weak;
+            if (!strongSelf) return;
+            if (strongSelf->_throttleTrailingToken != token) return; // 令牌过期，窗口已被新事件覆盖
+
+            strongSelf->_throttleWindowActive = NO;
+            id pending = strongSelf->_throttlePendingValue;
+            JHBindingNode *pendingNode = strongSelf->_throttlePendingNode;
+            strongSelf->_throttlePendingValue = nil;
+            strongSelf->_throttlePendingNode = nil;
+
+            if (pending && pendingNode) {
+                [strongSelf p_scheduleAfterThrottle:pendingNode newValue:pending];
+            }
+        });
+}
+
+/// throttle 通过后，再走 debounce / delay / 直通
+- (void)p_scheduleAfterThrottle:(JHBindingNode *)sourceNode newValue:(id)newValue {
     if (self.debounceInterval > 0) {
         // debounce：取消上次待执行 block，重新计时
         // pendingDebounceBlock 只在主线程读写，无需额外锁
@@ -297,9 +400,24 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
 
     // 确保 UI 更新在主线程执行
     void (^broadcastBlock)(void) = ^{
+        // skip（v1.4）：前 N 次广播直接跳过
+        if (self->_skipRemaining > 0) {
+            self->_skipRemaining--;
+            @synchronized (sBroadcastingGroupIDs) {
+                [sBroadcastingGroupIDs removeObject:self.groupID];
+            }
+            return;
+        }
+
+        // defaultValue（v1.4）：nil / NSNull 替换为默认值
+        id effectiveValue = newValue;
+        if (self.defaultValue && (!effectiveValue || [effectiveValue isKindOfClass:[NSNull class]])) {
+            effectiveValue = self.defaultValue;
+        }
+
         // log：广播日志
         if (self.debugLabel) {
-            NSLog(@"[JHBinder:%@] broadcast  %@ → %@", self.debugLabel, sourceNode.nodeID, newValue);
+            NSLog(@"[JHBinder:%@] broadcast  %@ → %@", self.debugLabel, sourceNode.nodeID, effectiveValue);
         }
 
         for (JHBindingNode *node in snapshot) {
@@ -307,12 +425,11 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
             if (!(node.direction & JHBindDirectionReceive)) continue;
 
             // 节点级 filter（v1.3）：先于 map 执行，检查原始广播值
-            // 返回 NO 则跳过该节点，其他节点照常
-            if (node.receiveFilterBlock && !node.receiveFilterBlock(newValue)) continue;
+            if (node.receiveFilterBlock && !node.receiveFilterBlock(effectiveValue)) continue;
 
             // 节点级 map（convertBlock）：filter 通过后再转换显示值
-            id outValue = newValue;
-            if (node.convertBlock) outValue = node.convertBlock(newValue);
+            id outValue = effectiveValue;
+            if (node.convertBlock) outValue = node.convertBlock(effectiveValue);
 
             id target = node.target;
             if (target) {
@@ -330,8 +447,17 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
             [sBroadcastingGroupIDs removeObject:self.groupID];
         }
 
-        // once：广播完成后移除所有节点，自动解绑
-        if (self.isOnce) {
+        // take（v1.4）/ once：广播完成后检查是否需要解绑
+        if (self.takeCount > 0) {
+            // take(N)：递减剩余次数，归零时解绑
+            if (self->_takeRemaining > 0) {
+                self->_takeRemaining--;
+                if (self->_takeRemaining == 0) {
+                    [self removeAllNodes];
+                }
+            }
+        } else if (self.isOnce) {
+            // 兼容旧的 isOnce 路径
             [self removeAllNodes];
         }
     };

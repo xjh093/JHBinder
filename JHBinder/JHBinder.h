@@ -124,6 +124,12 @@ typedef JHBinder *_Nonnull(^JHBinderNodeMapBlock)(JHConvertBlock convert);
 /// 节点级 filter（v1.3）：.nodeFilter(^BOOL(id v){ return YES/NO; })
 typedef JHBinder *_Nonnull(^JHBinderNodeFilterBlock)(JHNodeFilterBlock filter);
 
+/// 默认值（v1.4）：.defaultValue(@"占位符")
+typedef JHBinder *_Nonnull(^JHBinderDefaultBlock)(id _Nullable value);
+
+/// 跳过/次数限制（v1.4）：.skip(1)  .take(3)
+typedef JHBinder *_Nonnull(^JHBinderCountBlock)(NSUInteger count);
+
 
 // MARK: - JHBinder
 
@@ -447,6 +453,89 @@ typedef JHBinder *_Nonnull(^JHBinderNodeFilterBlock)(JHNodeFilterBlock filter);
  */
 + (JHBinder *)combineLatest:(NSArray<JHBinder *> *)sources
                  combineMap:(id _Nullable (^)(NSArray *values))combineBlock;
+
+
+// MARK: - v1.4 新增：广播流控制
+
+/**
+ * 【默认值】广播值为 nil 或 NSNull 时，替换为指定默认值。
+ *
+ * 用法：.defaultValue(@"未知用户")
+ *
+ * 适用场景：模型属性初始为 nil，配合 fire() 可让标签立即显示占位文字。
+ */
+@property (nonatomic, readonly) JHBinderDefaultBlock defaultValue;
+
+
+/**
+ * 【跳过】忽略前 N 次广播，第 N+1 次才开始正常更新接收节点。
+ *
+ * 用法：.skip(1)   // 跳过第一次（如绑定建立时的初始广播）
+ *
+ * 注意：skip 与 fire 配合使用时，fire 触发的那次也会被跳过。
+ */
+@property (nonatomic, readonly) JHBinderCountBlock skip;
+
+
+/**
+ * 【次数限制】广播 N 次后自动解绑（.once() 等价于 .take(1))。
+ *
+ * 用法：.take(3)   // 只更新前 3 次，之后自动解绑
+ *
+ * 适用场景：加载动画、新手引导等只需有限次更新的场景。
+ */
+@property (nonatomic, readonly) JHBinderCountBlock take;
+
+
+/**
+ * 【前沿节流】窗口期内只允许第一次广播通过，后续触发丢弃。
+ *
+ * 用法：.throttle(1.0)  // 每秒最多广播一次
+ *
+ * 与 debounce 区别：
+ *   - throttle：第一次立即通过，窗口期内后续丢弃（限频）
+ *   - debounce：停止触发 N 秒后才广播（消抖）
+ *
+ * 适用场景：滚动位置上报、页面曝光数据采集等高频事件限频。
+ */
+@property (nonatomic, readonly) JHBinderIntervalBlock throttle;
+
+
+/**
+ * 【前沿 + 后沿节流】第一次立即通过，窗口期内最后一次被压制的值在窗口结束时补发。
+ *
+ * 用法：.throttleTrailing(1.0)
+ *
+ * 行为：
+ *   t=0s  输入 A  → 立即广播 A（前沿）
+ *   t=0.3 输入 B  → 压制
+ *   t=0.6 输入 C  → 压制
+ *   t=1.0 窗口结束 → 补发 C（后沿）
+ *   t=1.5 输入 D  → 立即广播 D（新窗口前沿）
+ *
+ * 适用场景：实时预览且不过于频繁、需要最终结果的场景。
+ */
+@property (nonatomic, readonly) JHBinderIntervalBlock throttleTrailing;
+
+
+/**
+ * 【后沿节流】窗口内所有事件均被压制，窗口结束时将最后一个值一次性广播。
+ *
+ * 用法：.throttleTrailingOnly(1.0)
+ *
+ * 行为：
+ *   t=0   输入 A  → 压制，开始计时
+ *   t=0.3 输入 B  → 压制，更新待发值（不重置计时器）
+ *   t=0.6 输入 C  → 压制，更新待发值
+ *   t=1.0 窗口结束 → 广播 C
+ *   t=1.5 输入 D  → 开始新窗口...
+ *
+ * 与 debounce 区别：debounce 每次输入重置计时器（消抖），
+ *   throttleTrailingOnly 窗口开始后计时器不重置（保证最大延迟）。
+ *
+ * 适用场景：需要限制更新频率且不希望首个就触发的场景。
+ */
+@property (nonatomic, readonly) JHBinderIntervalBlock throttleTrailingOnly;
 
 
 // MARK: - 显式解绑（全局）

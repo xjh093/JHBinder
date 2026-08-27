@@ -64,6 +64,27 @@ NS_ASSUME_NONNULL_BEGIN
 /// 立即用第一个监听节点的当前值广播一次（fire 实现）
 - (void)fireFromFirstListenNode;
 
+
+// MARK: - v1.4 新增配置
+
+/// 默认值：广播值为 nil / NSNull 时替换为此值，防止接收节点出现空白
+@property (nonatomic, strong, nullable) id defaultValue;
+
+/// 跳过前 N 次广播（设置后立即生效）
+@property (nonatomic, assign) NSUInteger skipCount;
+
+/// 只广播 N 次后自动解绑（0 = 不限次数）；.once() 等价于 takeCount = 1
+@property (nonatomic, assign) NSUInteger takeCount;
+
+/// 节流间隔（秒）：配合 throttleMode 使用，>0 生效
+@property (nonatomic, assign) NSTimeInterval throttleInterval;
+
+/// 节流模式（v1.4）：默认 JHThrottleModeLead（前沿触发）
+/// - JHThrottleModeLead：第一次立即通过，窗口期内后续丢弃
+/// - JHThrottleModeLeadTrail：第一次立即通过 + 窗口结束时补发最后值
+/// - JHThrottleModeTrail：仅在窗口结束时发出最后一个值
+@property (nonatomic, assign) JHThrottleMode throttleMode;
+
 @end
 
 NS_ASSUME_NONNULL_END

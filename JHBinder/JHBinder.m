@@ -296,7 +296,8 @@
 
 - (JHBinderVoidBlock)once {
     return ^JHBinder *{
-        self.group.isOnce = YES;
+        // once 复用 take(1) 的实现路径
+        self.group.takeCount = 1;
         return self;
     };
 }
@@ -323,7 +324,52 @@
 }
 
 
-// MARK: - v1.3 新增：节点级 map / filter
+// MARK: - v1.4 新增：广播流控制
+
+- (JHBinderDefaultBlock)defaultValue {
+    return ^JHBinder *(id value) {
+        self.group.defaultValue = value;
+        return self;
+    };
+}
+
+- (JHBinderCountBlock)skip {
+    return ^JHBinder *(NSUInteger count) {
+        self.group.skipCount = count;
+        return self;
+    };
+}
+
+- (JHBinderCountBlock)take {
+    return ^JHBinder *(NSUInteger count) {
+        self.group.takeCount = count;
+        return self;
+    };
+}
+
+- (JHBinderIntervalBlock)throttle {
+    return ^JHBinder *(NSTimeInterval interval) {
+        self.group.throttleInterval = interval;
+        // throttleMode 默认为 JHThrottleModeLead，无需显式设置
+        return self;
+    };
+}
+
+- (JHBinderIntervalBlock)throttleTrailing {
+    return ^JHBinder *(NSTimeInterval interval) {
+        self.group.throttleInterval = interval;
+        self.group.throttleMode = JHThrottleModeLeadTrail;
+        return self;
+    };
+}
+
+- (JHBinderIntervalBlock)throttleTrailingOnly {
+    return ^JHBinder *(NSTimeInterval interval) {
+        self.group.throttleInterval = interval;
+        self.group.throttleMode = JHThrottleModeTrail;
+        return self;
+    };
+}
 
 - (JHBinderNodeMapBlock)nodeMap {
     return ^JHBinder *(JHConvertBlock convert) {

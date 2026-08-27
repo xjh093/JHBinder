@@ -11,8 +11,8 @@
 #import <UIKit/UIKit.h>
 
 // MARK: - 版本号
-#define JHBinderVersionString   @"1.3.0"
-#define JHBinderVersionNumber   0x010300  ///< 高8位Major，中8位Minor，低8位Patch
+#define JHBinderVersionString   @"1.4.0"
+#define JHBinderVersionNumber   0x010400  ///< 高8位Major，中8位Minor，低8位Patch
 
 
 // MARK: - 绑定方向（位掩码）
@@ -21,6 +21,14 @@ typedef NS_OPTIONS(NSUInteger, JHBindDirection) {
     JHBindDirectionListen  = 1 << 0,  ///< IN：监听此节点变化，向链广播
     JHBindDirectionReceive = 1 << 1,  ///< OUT：接收链广播，更新此节点
     JHBindDirectionBoth    = JHBindDirectionListen | JHBindDirectionReceive, ///< 双向
+};
+
+
+// MARK: - Throttle 模式（v1.4）
+typedef NS_ENUM(NSUInteger, JHThrottleMode) {
+    JHThrottleModeLead       = 0, ///< 前沿触发（默认）：第一次立即通过，窗口期内后续丢弃
+    JHThrottleModeLeadTrail  = 1, ///< 前沿 + 后沿：第一次立即通过，窗口结束时补发最后一个值
+    JHThrottleModeTrail      = 2, ///< 后沿触发：窗口结束时发出最后一个值（中间值丢弃）
 };
 
 
@@ -36,6 +44,47 @@ typedef BOOL (^JHNodeFilterBlock)(id _Nullable value);
 
 /// 输出回调：接收广播时触发
 typedef void (^JHOutBlock)(id _Nullable value);
+
+
+// MARK: - 版本历史
+/**
+ * v1.0.0
+ * -------
+ * - KVO + UIControl 双向绑定核心（twoWay / twoWayUI）
+ * - 单向监听（listen / listenUI）
+ * - 单向接收（receive / receiveMap）
+ * - 键值观察回调（observe）
+ * - 链级过滤（filter）
+ * - 值转换块（convertBlock / map）
+ * - 绑定组生命周期管理（store / JHBindingManager）
+ *
+ * v1.1.0
+ * -------
+ * - fire()：创建绑定后立即触发一次广播，无需等待值变化
+ * - log(@"label")：广播时在控制台打印调试信息
+ *
+ * v1.2.0
+ * -------
+ * - distinct()：值未变化时不广播（去重）
+ * - once()：广播一次后自动解绑
+ * - debounce(t)：防抖，最后一次变化 t 秒后才广播
+ * - delay(t)：延迟 t 秒后广播
+ *
+ * v1.3.0
+ * -------
+ * - nodeMap(block)：节点级 map，对单个 receive 节点做值转换（不影响其他节点）
+ * - nodeFilter(block)：节点级 filter，对单个 receive 节点过滤（不影响其他节点）
+ * - +combineLatest:combineMap:：多源合并，所有源都有值后触发，合并为一个新值
+ *
+ * v1.4.0
+ * -------
+ * - defaultValue(v)：广播值为 nil / NSNull 时替换为指定默认值
+ * - skip(n)：跳过前 n 次广播，第 n+1 次起正常传递
+ * - take(n)：只广播 n 次，之后自动解绑（n=0 等同于不限次数）
+ * - throttle(t)：节流，窗口期 t 秒内只放行第一次广播（前沿触发，JHThrottleModeLead）
+ * - throttleTrailing(t)：前沿 + 后沿；第一次立即通过，窗口结束时补发最后被压制的值
+ * - throttleTrailingOnly(t)：后沿触发；窗口开始计时，结束时发出最后一个值
+ */
 
 
 #endif /* JHBinderDefine_h */
