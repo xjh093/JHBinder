@@ -42,6 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 // MARK: - 过滤器
 - (void)setFilterBlock:(nullable JHFilterBlock)filterBlock;
 
+
 // MARK: - v1.2 新增配置（链式 DSL 通过 JHBinder 设置）
 
 /// 防抖间隔（秒）：停止触发后延迟广播，连续触发时重置计时器，>0 生效

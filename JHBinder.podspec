@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "JHBinder"
-  s.version      = "1.2.0"
+  s.version      = "1.3.0"
   s.summary      = "轻量级 KVO + UIControl 数据绑定库，链式 DSL，支持双向/单向绑定、值转换、防抖、延迟等。"
 
   s.description  = <<~DESC
@@ -16,6 +16,9 @@ Pod::Spec.new do |s|
     - 单次：once（首次广播后自动解绑）
     - 即时同步：fire（绑定建立时立即广播当前值）
     - 调试日志：log（控制台打印广播详情）
+    - 节点级 map：nodeMap（每个 receive 独立转换，v1.3）
+    - 节点级 filter：nodeFilter（跳过单个节点而不丢弃整条链，v1.3）
+    - 多源合并：combineLatest（任意源发射时合并最新快照，v1.3）
     - 自动生命周期：通过 .store(self.bindings) 绑定 VC 生命周期，无需手动解绑
     - 线程安全：并发队列 + barrier 读写分离，主线程广播保证 UI 安全
   DESC

@@ -306,6 +306,11 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
             if (node == sourceNode) continue; // 不回传给来源节点
             if (!(node.direction & JHBindDirectionReceive)) continue;
 
+            // 节点级 filter（v1.3）：先于 map 执行，检查原始广播值
+            // 返回 NO 则跳过该节点，其他节点照常
+            if (node.receiveFilterBlock && !node.receiveFilterBlock(newValue)) continue;
+
+            // 节点级 map（convertBlock）：filter 通过后再转换显示值
             id outValue = newValue;
             if (node.convertBlock) outValue = node.convertBlock(newValue);
 

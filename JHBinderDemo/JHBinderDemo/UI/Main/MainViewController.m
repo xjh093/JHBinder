@@ -45,6 +45,8 @@ static NSString * const kCellID = @"MainCell";
            @"class": @"ConvertDemoViewController" },
         @{ @"title": @"06  v1.2 新特性（fire / debounce / delay / distinct / once）",
            @"class": @"V12DemoViewController" },
+        @{ @"title": @"07  v1.3 新特性（nodeMap / nodeFilter / combineLatest）",
+           @"class": @"V13DemoViewController" },
     ];
 }
 

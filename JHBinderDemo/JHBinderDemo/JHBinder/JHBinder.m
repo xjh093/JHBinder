@@ -9,7 +9,9 @@
 #import "JHBindingGroup.h"
 #import "JHBindingNode.h"
 #import "JHBindingManager.h"
+#import "JHCombineRelay.h"
 #import "NSObject+JHBind.h"
+#import <objc/runtime.h>
 
 
 @interface JHBinder ()
@@ -19,6 +21,9 @@
 
 /// 对应 manager 中注册的 groupID
 @property (nonatomic, copy) NSString *groupID;
+
+/// v1.3：最后一次添加的 Receive 节点，供 .nodeMap() / .nodeFilter() 引用
+@property (nonatomic, weak) JHBindingNode *lastReceiveNode;
 
 @end
 
@@ -214,6 +219,7 @@
                                                           direction:JHBindDirectionReceive
                                                        convertBlock:nil];
         [self p_addNode:node];
+        self.lastReceiveNode = node;  // v1.3
         return self;
     };
 }
@@ -225,6 +231,7 @@
                                                           direction:JHBindDirectionReceive
                                                        convertBlock:convert];
         [self p_addNode:node];
+        self.lastReceiveNode = node;  // v1.3
         return self;
     };
 }
@@ -313,6 +320,61 @@
         self.group.debugLabel = label;
         return self;
     };
+}
+
+
+// MARK: - v1.3 新增：节点级 map / filter
+
+- (JHBinderNodeMapBlock)nodeMap {
+    return ^JHBinder *(JHConvertBlock convert) {
+        self.lastReceiveNode.convertBlock = convert;
+        return self;
+    };
+}
+
+- (JHBinderNodeFilterBlock)nodeFilter {
+    return ^JHBinder *(JHNodeFilterBlock filter) {
+        self.lastReceiveNode.receiveFilterBlock = filter;
+        return self;
+    };
+}
+
+
+// MARK: - v1.3 新增：combineLatest
+
++ (JHBinder *)combineLatest:(NSArray<JHBinder *> *)sources
+                 combineMap:(id _Nullable (^)(NSArray *))combineBlock {
+    NSUInteger count = sources.count;
+    NSAssert(count > 0, @"JHBinder.combineLatest: sources 不能为空");
+
+    JHCombineRelay *relay = [[JHCombineRelay alloc] initWithCount:count
+                                                     combineBlock:combineBlock];
+
+    // 为每个 source 注入 outBlock 节点，发射时通知 relay
+    for (NSUInteger i = 0; i < count; i++) {
+        JHBinder *source = sources[i];
+        NSUInteger idx = i;
+        __weak JHCombineRelay *weakRelay = relay;
+        NSString *key = [NSString stringWithFormat:@"_jh_combine_%lu", (unsigned long)idx];
+        JHBindingNode *node = [JHBindingNode nodeWithOutBlock:^(id _Nullable value) {
+            [weakRelay updateValue:value atIndex:idx];
+        } key:key];
+        [source.group addNode:node];
+    }
+
+    // combine binder 监听 relay.result（KVO），result 变化时向下游广播
+    JHBinder *combineBinder = [JHBinder p_newBinder];
+    JHBindingNode *listenNode = [[JHBindingNode alloc] initWithTarget:relay
+                                                              keyPath:@"result"
+                                                            direction:JHBindDirectionListen
+                                                         convertBlock:nil];
+    [combineBinder p_addNode:listenNode];
+
+    // combine binder 强持有 sources 和 relay，保证生命周期
+    objc_setAssociatedObject(combineBinder, @"_jh_sources", sources, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(combineBinder, @"_jh_relay",   relay,   OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
+    return combineBinder;
 }
 
 @end

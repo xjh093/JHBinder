@@ -20,6 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) NSString *targetHash;     ///< target 释放后仍可识别节点
 @property (nonatomic, assign) JHBindDirection direction;
 @property (nonatomic, copy, nullable) JHConvertBlock convertBlock;
+@property (nonatomic, copy, nullable) JHNodeFilterBlock receiveFilterBlock; ///< 节点级过滤（v1.3），返回 NO 则跳过本节点，不影响其他节点
 @property (nonatomic, copy, nullable) JHOutBlock outBlock; ///< 纯 block 订阅（无 target）
 
 // MARK: - UI Control 专用

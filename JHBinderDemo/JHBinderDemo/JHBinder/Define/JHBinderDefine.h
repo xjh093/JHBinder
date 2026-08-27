@@ -11,8 +11,8 @@
 #import <UIKit/UIKit.h>
 
 // MARK: - 版本号
-#define JHBinderVersionString   @"1.2.0"
-#define JHBinderVersionNumber   0x010200  ///< 高8位Major，中8位Minor，低8位Patch
+#define JHBinderVersionString   @"1.3.0"
+#define JHBinderVersionNumber   0x010300  ///< 高8位Major，中8位Minor，低8位Patch
 
 
 // MARK: - 绑定方向（位掩码）
@@ -28,8 +28,11 @@ typedef NS_OPTIONS(NSUInteger, JHBindDirection) {
 /// 值转换：输入旧值，返回新值（用于类型转换，如 NSString -> NSNumber）
 typedef id _Nullable (^JHConvertBlock)(id _Nullable value);
 
-/// 过滤：返回 YES 则允许广播，返回 NO 则拦截
+/// 链级过滤：返回 YES 则允许广播，返回 NO 则拦截整条链
 typedef BOOL (^JHFilterBlock)(id _Nullable oldValue, id _Nullable newValue);
+
+/// 节点级过滤（v1.3）：只看新值，返回 NO 则跳过该节点，不影响其他节点
+typedef BOOL (^JHNodeFilterBlock)(id _Nullable value);
 
 /// 输出回调：接收广播时触发
 typedef void (^JHOutBlock)(id _Nullable value);

@@ -118,6 +118,12 @@ typedef JHBinder *_Nonnull(^JHBinderLabelBlock)(NSString *label);
 /// 生命周期存储：.store(self.bindings)
 typedef void(^JHBinderStoreBlock)(NSMutableArray *array);
 
+/// 节点级 map（v1.3）：.nodeMap(^id(id v){ return ...; })
+typedef JHBinder *_Nonnull(^JHBinderNodeMapBlock)(JHConvertBlock convert);
+
+/// 节点级 filter（v1.3）：.nodeFilter(^BOOL(id v){ return YES/NO; })
+typedef JHBinder *_Nonnull(^JHBinderNodeFilterBlock)(JHNodeFilterBlock filter);
+
 
 // MARK: - JHBinder
 
@@ -328,6 +334,7 @@ typedef void(^JHBinderStoreBlock)(NSMutableArray *array);
  */
 @property (nonatomic, readonly) JHBinderVoidBlock fire;
 
+
 /**
  * 【去重】UIControl 相同值不重复广播。
  *
@@ -337,6 +344,7 @@ typedef void(^JHBinderStoreBlock)(NSMutableArray *array);
  * 适用场景： UISlider 拖动时可能频繁触发相同值，可减少不必要广播。
  */
 @property (nonatomic, readonly) JHBinderVoidBlock distinct;
+
 
 /**
  * 【单次触发】首次广播完成后，自动移除所有节点（解绑）。
@@ -348,6 +356,7 @@ typedef void(^JHBinderStoreBlock)(NSMutableArray *array);
  */
 @property (nonatomic, readonly) JHBinderVoidBlock once;
 
+
 /**
  * 【防抖】停止触发后延迟 N 秒广播，连续触发时重置计时器。
  *
@@ -358,6 +367,7 @@ typedef void(^JHBinderStoreBlock)(NSMutableArray *array);
  */
 @property (nonatomic, readonly) JHBinderIntervalBlock debounce;
 
+
 /**
  * 【延迟】每次触发后延迟 N 秒广播，不取消前次。
  *
@@ -367,6 +377,7 @@ typedef void(^JHBinderStoreBlock)(NSMutableArray *array);
  */
 @property (nonatomic, readonly) JHBinderIntervalBlock delay;
 
+
 /**
  * 【调试日志】开启广播日志，每次广播打印：[JHBinder:label] nodeID → value。
  *
@@ -375,6 +386,67 @@ typedef void(^JHBinderStoreBlock)(NSMutableArray *array);
  * 建议仅在调试阶段使用，正式上线前移除。
  */
 @property (nonatomic, readonly) JHBinderLabelBlock log;
+
+
+// MARK: - v1.3 新增：节点级 map / filter
+
+/**
+ * 【节点级 map】对【上一个 receive / twoWay 节点】设置独立的值转换。
+ *
+ * 用法：.receive(redLabel, @"text").nodeMap(^id(NSNumber *v){
+ *              return [NSString stringWithFormat:@"❌ %@分", v];
+ *          })
+ *
+ * - 实质是设置该节点的 convertBlock，与在 receiveMap 中内联传入效果相同。
+ * - 覆盖当前节点已有的 convertBlock（如果有）。
+ * - 必须紧跟在 .receive() / .receiveMap() 之后。
+ */
+@property (nonatomic, readonly) JHBinderNodeMapBlock nodeMap;
+
+
+/**
+ * 【节点级 filter】对【上一个 receive / twoWay 节点】设置独立的过滤器。
+ *
+ * 用法：.receive(redLabel, @"text")
+ *          .nodeFilter(^BOOL(NSNumber *v){ return v.intValue < 60; })
+ *
+ * - 返回 NO 时跳过该节点，其他节点不受影响（区别于链级 filter 会丢弃整条链广播）。
+ * - 参数 value 是【原始广播值】，即 nodeMap 转换之前的值（filter 先于 map 执行）。
+ * - 必须紧跟在 .receive() 之后（可配合 nodeMap 一起使用）。
+ */
+@property (nonatomic, readonly) JHBinderNodeFilterBlock nodeFilter;
+
+
+// MARK: - v1.3 新增： combineLatest
+
+/**
+ * 【链起始】多源合并：任意源发射时，收集所有源的最新值，经 combineBlock 产出单一值广播。
+ *
+ * 用法：
+ * @code
+ * [JHBinder combineLatest:@[
+ *     JHBinder.listen(modelA, @"firstName"),
+ *     JHBinder.listen(modelB, @"lastName")
+ * ] combineMap:^id(NSArray *v){
+ *     return [NSString stringWithFormat:@"%@ %@", v[0], v[1]];
+ * }]
+ * .receive(self.fullNameLabel, @"text")
+ * .store(self.bindings);
+ * @endcode
+ *
+ * 语义（标准 combineLatest）：
+ * - 所有源至少各发射过一次后，combine 才开始广播。
+ * - 之后任意源发射，就用最新快照重新合并。
+ *
+ * 生命周期：
+ * - 只需 .store() combine binder；
+ * - sources 的生命周期由 combine binder 内部持有，无需单独 store。
+ *
+ * @param sources     源 JHBinder 数组，每个必须包含至少一个 listen / twoWay 节点
+ * @param combineBlock values 按 sources 顺序排列；返回 nil 则广播 NSNull
+ */
++ (JHBinder *)combineLatest:(NSArray<JHBinder *> *)sources
+                 combineMap:(id _Nullable (^)(NSArray *values))combineBlock;
 
 
 // MARK: - 显式解绑（全局）
