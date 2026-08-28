@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)containsNodeForTargetHash:(NSString *)targetHash keyPath:(NSString *)keyPath;
 
 // MARK: - 过滤器
-- (void)setFilterBlock:(nullable JHFilterBlock)filterBlock;
+@property (nonatomic, copy, nullable) JHFilterBlock filterBlock;
 
 
 // MARK: - v1.2 新增配置（链式 DSL 通过 JHBinder 设置）
@@ -151,6 +151,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// sample(t)（v1.7）：每隔 t 秒将 lastEffectiveValue 推送到接收节点，0 = 禁用
 @property (nonatomic, assign) NSTimeInterval sampleInterval;
+
+
+// MARK: - v1.8 新增配置
+
+/// pausable(signal)（v1.8）：gate 信号 group；信号 lastEffectiveValue 为 false 时整条链静默
+@property (nonatomic, strong, nullable) JHBindingGroup *pauseSignalGroup;
+
+/// rebindTo:keyPath:（v1.8）：热替换第一个 KVO 监听节点的 target，不重建链
+/// 调用后立即触发一次 fire 以同步新 target 的当前值
+- (void)rebindListenNodeTo:(nullable id)newTarget keyPath:(NSString *)newKeyPath;
 
 @end
 

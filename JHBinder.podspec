@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "JHBinder"
-  s.version      = "1.7.0"
+  s.version      = "1.8.0"
   s.summary      = "轻量级 KVO + UIControl 数据绑定库，链式 DSL，支持双向绑定、多源合并、辦加器、条件流控、内联副作用等。"
 
   s.description  = <<~DESC
@@ -42,6 +42,10 @@ Pod::Spec.new do |s|
     - 降频采样：sample(t)（每隔 t 秒推送最新值，v1.7）
     - 实例 combine：combine(other, block)（combineLatest 链式版，v1.7）
     - 第 N 次响应：elementAt(n)（skip(n-1)+take(1)，v1.7）
+    - 格式化语法糖：format(fmt)（transform 特化，自动适配 NSNumber 类型，v1.8）
+    - 非空过滤：notNil / required（链级 nil/空字符串屏蔽，v1.8）
+    - 动态开关：pausable(signal)（gate 信号控制链通断，v1.8）
+    - 热替换：rebindTo:keyPath:（不重建链更换 target，Cell 复用刚需，v1.8）
     - 自动生命周期：通过 .store(self.bindings) 绑定 VC 生命周期，无需手动解绑
     - 线程安全：并发队列 + barrier 读写分离，主线程广播保证 UI 安全
   DESC

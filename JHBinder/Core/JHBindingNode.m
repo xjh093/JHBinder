@@ -69,4 +69,13 @@
     return node;
 }
 
+// MARK: - v1.8 rebind 节点热替换
+
+- (void)updateToTarget:(nullable id)newTarget keyPath:(NSString *)newKeyPath {
+    self.target     = newTarget;
+    self.targetHash = newTarget ? [NSString stringWithFormat:@"%p", newTarget] : @"nil";
+    self.keyPath    = newKeyPath ?: @"";
+    self.nodeID     = [NSString stringWithFormat:@"%@_%@", self.targetHash, self.keyPath];
+}
+
 @end

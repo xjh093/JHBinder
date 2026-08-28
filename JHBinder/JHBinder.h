@@ -77,6 +77,52 @@
  *     })
  *     .store(self.bindings);
  * @endcode
+ *
+ * ============================================================
+ * ⚠️ 常见陷阱：双链串联中间经过 model 属性（链 A → model → 链 B）
+ * ============================================================
+ *
+ * JHBinder 内部使用 `jh_isUpdating` 标记防止双向绑定产生无限循环。
+ * 当链 A 通过 `.receive(model, keyPath)` 写入 model 属性时，
+ * JHBinder 会将该 model 实例标记为 `jh_isUpdating = YES`，
+ * 此期间同一 model 属性的 **所有其他 KVO 链（链 B）** 都会被直接跳过。
+ *
+ * ❌ 错误示例（双链串联，链 B 永远不会触发）：
+ * @code
+ * // 链 A：UIControl → receive(model)
+ * JHBinder
+ *     .listenUI(textField, @"text", UIControlEventEditingChanged)
+ *     .receive(self.model, @"keyword")       // 写入时 model.jh_isUpdating = YES
+ *     .store(self.bindings);
+ *
+ * // 链 B：listen(model) → 其他操作 → receive(label)
+ * JHBinder
+ *     .listen(self.model, @"keyword")         // KVO 回调被 jh_isUpdating 拦截 → 永远不执行
+ *     .required
+ *     .receive(self.label, @"text")
+ *     .store(self.bindings);
+ * @endcode
+ *
+ * ✅ 正确方案 1：合并单链（UIControl 直达 label，无需 model 中转）
+ * @code
+ * JHBinder
+ *     .listenUI(textField, @"text", UIControlEventEditingChanged)
+ *     .required                               // 直接在链上过滤
+ *     .receive(self.label, @"text")
+ *     .store(self.bindings);
+ * @endcode
+ *
+ * ✅ 正确方案 2：用 ObjC 代码直接赋值 model（不经过 JHBinder 的 KVC 写入路径）
+ * @code
+ * // 按钮 Action 或手动赋值，jh_isUpdating 不会被设置
+ * self.model.keyword = textField.text;        // 链 B 的 KVO 正常触发 ✓
+ * @endcode
+ *
+ * 规律总结：
+ *   - 链 A 通过 .receive / .twoWay 写入 model 时：链 B 的 KVO 被屏蔽
+ *   - 直接用 ObjC 代码赋值 model（setter / 直接属性赋值）时：链 B 正常
+ *   - 同一条链内多个节点（receive(model) 与 receive(label) 并存）：正常，
+ *     因为它们在同一次 broadcastBlock 里顺序写入，不走 KVO 回调路径
  */
 
 #import <UIKit/UIKit.h>
@@ -155,8 +201,14 @@ typedef JHBinder *_Nonnull(^JHBinderPluckBlock)(NSString *keyPath);
 typedef JHBinder *_Nonnull(^JHBinderTimeoutBlock)(NSTimeInterval interval, id _Nullable fallback);
 
 /// combine（v1.7）：.combine(other, ^id(NSArray *vs){ return vs; })
-typedef JHBinder *_Nonnull(^JHBinderCombineBlock)(JHBinder *other,
-                                                   id _Nullable (^combineMap)(NSArray *values));
+typedef JHBinder *_Nonnull(^JHBinderCombineBlock)(JHBinder *other, id _Nullable (^combineMap)(NSArray *values));
+
+/// format（v1.8）：.format(@"¥%.2f")  .format(@"共 %@ 件")
+typedef JHBinder *_Nonnull(^JHBinderFormatBlock)(NSString *format);
+
+/// 引用捕获（v1.8）：.assignTo(&_binder) 将 binder 赋值给外部变量，返回 self 以继续链式调用
+/// 用法：.assignTo(&_nameBinder).store(self.bindings)
+typedef JHBinder *_Nonnull(^JHBinderAssignBlock)(JHBinder * __strong _Nullable * _Nonnull outRef);
 
 
 // MARK: - JHBinder
@@ -354,6 +406,20 @@ typedef JHBinder *_Nonnull(^JHBinderCombineBlock)(JHBinder *other,
  * 使用 +unbindTarget: / +unbindTarget:keyPath: 显式解绑。
  */
 @property (nonatomic, readonly) JHBinderStoreBlock store;
+
+/**
+ * 【引用捕获】将 binder 赋值给指定变量，同时返回 self，可继续链式调用。
+ *
+ * 用法：.assignTo(&_nameBinder).store(self.bindings)
+ *
+ * 典型场景：Cell 复用时需要持有 binder 引用以调用 rebindTo:keyPath:。
+ * 对比原写法：
+ *   _nameBinder = JHBinder.listen(...).receive(...).fire();
+ *   [self.bindings addObject:_nameBinder];
+ * 新写法（一行链式完成）：
+ *   JHBinder.listen(...).receive(...).fire().assignTo(&_nameBinder).store(self.bindings);
+ */
+@property (nonatomic, readonly) JHBinderAssignBlock assignTo;
 
 
 // MARK: - v1.2 新增：广播行为控制
@@ -872,6 +938,81 @@ typedef JHBinder *_Nonnull(^JHBinderCombineBlock)(JHBinder *other,
  * 适合"只响应第一次确认"、"第三次才触发"等场景。
  */
 @property (nonatomic, readonly) JHBinderCountBlock elementAt;
+
+
+// MARK: - v1.8 新增操作符
+
+/**
+ * 【format】格式化字符串语法糖，是 transform 的高频特化。
+ *
+ * 支持的格式：
+ *   .format(@"¥%.2f")     // 浮点数 → "¥12.50"（NSNumber float/double 自动用 doubleValue）
+ *   .format(@"%lld 次")   // 整数   → "42 次"（NSNumber 整数类型自动用 longLongValue）
+ *   .format(@"共 %@ 件")  // 任意值 → 用对象的 -description（最安全，推荐）
+ *
+ * 规则：
+ *   - 格式串含 %@ → 直接传入对象
+ *   - 值是 NSNumber float/double → 传 doubleValue
+ *   - 值是 NSNumber 整数 → 传 longLongValue
+ *   - nil / NSNull → 原样透传（不格式化）
+ *   - 可与其他 transform 链式组合，format 追加在已有 transformBlock 之后
+ */
+@property (nonatomic, readonly) JHBinderFormatBlock format;
+
+/**
+ * 【notNil】过滤 nil 和 NSNull，只允许有效对象通过。
+ *
+ * 用法：
+ *   .notNil   // 点访问，无括号
+ *
+ * 等价于：.filter(^BOOL(id __unused o, id v){ return v && v != [NSNull null]; })
+ * 可与 required 组合：.notNil.required（等价于只用 required）
+ */
+@property (nonatomic, readonly) JHBinder *notNil;
+
+/**
+ * 【required】比 notNil 更严格：额外过滤空字符串。
+ *
+ * 用法：
+ *   .required   // 点访问，无括号
+ *
+ * nil / NSNull / @"" 均不通过；非字符串类型只做 nil / NSNull 检查。
+ * 适用于表单必填项校验、搜索关键词非空校验等场景。
+ */
+@property (nonatomic, readonly) JHBinder *required;
+
+/**
+ * 【pausable】动态开关：signal 当前值为 true 时广播通过，false 时整条链静默。
+ *
+ * 用法：
+ *   JHBinder *loginSignal = JHBinder.listen(session, @"isLoggedIn");
+ *   JHBinder
+ *       .listen(model, @"balance")
+ *       .pausable(loginSignal)     // 未登录时 balance 变化不触发 UI 更新
+ *       .receive(label, @"text")
+ *       .store(self.bindings);
+ *
+ * - signal 由 pausable 强持有，无需单独 store
+ * - signal 首次有效值（true）出现后，链自动恢复广播
+ * - 暂停期间积累的值会丢弃（不缓冲），恢复后只有新广播才会触发
+ */
+@property (nonatomic, readonly) JHBinderWithLatestFromBlock pausable;
+
+/**
+ * 【rebindTo:keyPath:】热替换第一个 KVO 监听节点的 target，不重建链。
+ *
+ * 用法（典型 Cell 复用场景）：
+ *   // cellForRow — 首次建链（或 prepareForReuse 后）
+ *   self.nameBinder = JHBinder.listen(model, @"name").receive(self.nameLabel, @"text");
+ *   [self.nameBinder store:self.bindings];
+ *
+ *   // updateWithModel: — Cell 复用时只换 target
+ *   [self.nameBinder rebindTo:newModel keyPath:@"name"];
+ *
+ * 调用后立即 fire 一次，UI 立刻同步到新 target 的当前值。
+ * 只替换第一个 KVO listen 节点；UIControl target-action 节点不受影响。
+ */
+- (void)rebindTo:(nullable id)newTarget keyPath:(NSString *)newKeyPath;
 
 
 // MARK: - 显式解绑（全局）

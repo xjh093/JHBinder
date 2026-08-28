@@ -11,8 +11,8 @@
 #import <UIKit/UIKit.h>
 
 // MARK: - 版本号
-#define JHBinderVersionString   @"1.7.0"
-#define JHBinderVersionNumber   0x010700  ///< 高8位Major，中8位Minor，低8位Patch
+#define JHBinderVersionString   @"1.8.0"
+#define JHBinderVersionNumber   0x010800  ///< 高8位Major，中8位Minor，低8位Patch
 
 
 // MARK: - 绑定方向（位掩码）
@@ -119,6 +119,15 @@ typedef id _Nullable (^JHAccumulateBlock)(id _Nullable accumulated, id _Nullable
  * - sample(t)：每隔 t 秒取链中最新值推送到接收节点（降频采样）
  * - combine(other, block)：combineLatest 的实例方法版，链式风格更友好
  * - elementAt(n)：只对第 n 次广播响应，之后自动解绑
+ *
+ * v1.8.0
+ * -------
+ * - format(fmt)：格式化字符串语法糖；%@ 传对象，数字类型自动适配 doubleValue/longLongValue
+ * - notNil：属性访问即过滤；屏蔽 nil / NSNull，链只在有效值时广播
+ * - required：比 notNil 更严格；额外屏蔽空字符串（""）和纯空白字符串（trim 后为空），适用于表单必填项
+ * - pausable(signal)：动态开关；signal 当前值为假值（nil / NSNull / @NO / @0）时整条链静默，真值时恢复
+ * - rebindTo:keyPath:：实例方法；热替换第一个 KVO 监听节点的 target，不重建链（Cell 复用场景）
+ * - assignTo(&ref)：链式捕获；将当前 JHBinder 赋值给外部强引用，消除先声明后赋值的样板代码
  */
 
 

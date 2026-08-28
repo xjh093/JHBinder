@@ -55,6 +55,10 @@ static NSString * const kCellID = @"MainCell";
            @"class": @"V16DemoViewController" },
         @{ @"title": @"11  v1.7 新特性（interval / takeUntil / pluck / bufferCount / bufferTime / timeout / sample / combine / elementAt）",
            @"class": @"V17DemoViewController" },
+        @{ @"title": @"12  v1.8 新特性（format / notNil / required / pausable / rebindTo:keyPath:）",
+           @"class": @"V18DemoViewController" },
+        @{ @"title": @"13  v1.8 rebindTo: — Cell 复用列表实战",
+           @"class": @"V18CellDemoViewController" },
     ];
 }
 

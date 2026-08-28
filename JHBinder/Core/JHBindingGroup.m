@@ -24,7 +24,6 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
 /// 按插入顺序存储 nodeID，保证广播时 receive 节点先于 observe block 节点执行
 @property (nonatomic, strong) NSMutableArray<NSString *> *nodeOrder;
 @property (nonatomic, strong) dispatch_queue_t queue;
-@property (nonatomic, copy, nullable) JHFilterBlock filterBlock;
 /// debounce 待执行 block（主线程操作，无需额外锁）
 @property (nonatomic, strong, nullable) dispatch_block_t pendingDebounceBlock;
 
@@ -167,10 +166,6 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
         result = (self->_nodeMap[nodeID] != nil);
     });
     return result;
-}
-
-- (void)setFilterBlock:(nullable JHFilterBlock)filterBlock {
-    _filterBlock = [filterBlock copy];
 }
 
 // MARK: - v1.4 自定义 setter（初始化剩余计数器）
@@ -598,6 +593,18 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
 
     // 确保 UI 更新在主线程执行
     void (^broadcastBlock)(void) = ^{
+        // pausable（v1.8）：gate 信号为 false 时整条链静默返回
+        if (self.pauseSignalGroup) {
+            id gate = self.pauseSignalGroup->_lastEffectiveValue;
+            BOOL isPaused = !gate || gate == [NSNull null] || ![gate boolValue];
+            if (isPaused) {
+                @synchronized (sBroadcastingGroupIDs) {
+                    [sBroadcastingGroupIDs removeObject:self.groupID];
+                }
+                return;
+            }
+        }
+
         // skip（v1.4）：前 N 次广播直接跳过
         if (self->_skipRemaining > 0) {
             self->_skipRemaining--;
@@ -777,6 +784,48 @@ static NSMutableSet<NSString *> *sBroadcastingGroupIDs;
 }
 
 // MARK: - fire
+
+// MARK: - v1.8 rebind
+
+- (void)rebindListenNodeTo:(nullable id)newTarget keyPath:(NSString *)newKeyPath {
+    if (!newTarget || !newKeyPath.length) return;
+
+    // 1. 找第一个 KVO listen 节点（非 UIControl）
+    __block JHBindingNode *firstNode = nil;
+    __block NSString *oldKey = nil;
+    dispatch_sync(self.queue, ^{
+        for (NSString *nid in self->_nodeOrder) {
+            JHBindingNode *n = self->_nodeMap[nid];
+            if (n && !n.isUIControl && (n.direction & JHBindDirectionListen)) {
+                firstNode = n;
+                oldKey = nid;
+                break;
+            }
+        }
+    });
+    if (!firstNode) return;
+
+    // 2. 停止旧 KVO
+    [self p_stopObservingNode:firstNode];
+
+    // 3. 更新节点 target / keyPath / nodeID
+    [firstNode updateToTarget:newTarget keyPath:newKeyPath];
+
+    // 4. 同步更新 _nodeMap 的 key
+    NSString *newKey = firstNode.nodeID;
+    dispatch_barrier_sync(self.queue, ^{
+        [self->_nodeMap removeObjectForKey:oldKey];
+        self->_nodeMap[newKey] = firstNode;
+        NSUInteger idx = [self->_nodeOrder indexOfObject:oldKey];
+        if (idx != NSNotFound) self->_nodeOrder[idx] = newKey;
+    });
+
+    // 5. 注册新 KVO
+    [self p_startObservingNode:firstNode];
+
+    // 6. 立即广播新 target 当前值，让 UI 同步
+    [self fireFromFirstListenNode];
+}
 
 - (void)fireFromFirstListenNode {
     // 找插入顺序中第一个有监听能力的节点作为广播源

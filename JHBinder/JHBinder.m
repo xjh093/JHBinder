@@ -663,4 +663,97 @@
     };
 }
 
+// MARK: - v1.8 实例操作符
+
+- (JHBinderFormatBlock)format {
+    return ^JHBinder *(NSString *fmt) {
+        NSString *f = fmt;
+        // 格式化 block：自动适配 NSNumber 类型
+        JHConvertBlock fmtBlock = ^id(id v) {
+            if (!v || v == [NSNull null]) return v;
+            // %@ → 直接传对象（最安全，也适用于非 NSNumber）
+            if ([f containsString:@"%@"]) {
+                return [NSString stringWithFormat:f, v];
+            }
+            if ([v isKindOfClass:[NSNumber class]]) {
+                NSNumber *n = (NSNumber *)v;
+                const char *t = n.objCType;
+                // float / double → doubleValue
+                if (t[0] == 'f' || t[0] == 'd') {
+                    return [NSString stringWithFormat:f, n.doubleValue];
+                }
+                // 整数类型 → longLongValue（适配 %lld；%d/%ld 因 va_args 提升也通常正常）
+                return [NSString stringWithFormat:f, n.longLongValue];
+            }
+            return [NSString stringWithFormat:f, v];
+        };
+        // 若已有 transformBlock，则追加在其后
+        JHConvertBlock existing = self.group.transformBlock;
+        if (existing) {
+            JHConvertBlock captured = existing;
+            self.group.transformBlock = ^id(id v) { return fmtBlock(captured(v)); };
+        } else {
+            self.group.transformBlock = fmtBlock;
+        }
+        return self;
+    };
+}
+
+- (JHBinder *)notNil {
+    JHFilterBlock prev = self.group.filterBlock;
+    if (prev) {
+        JHFilterBlock captured = prev;
+        self.group.filterBlock = ^BOOL(id o, id v) {
+            return (v && v != [NSNull null]) && captured(o, v);
+        };
+    } else {
+        self.group.filterBlock = ^BOOL(id __unused o, id v) {
+            return v && v != [NSNull null];
+        };
+    }
+    return self;
+}
+
+- (JHBinder *)required {
+    JHFilterBlock prev = self.group.filterBlock;
+    JHFilterBlock reqBlock = ^BOOL(id __unused o, id v) {
+        if (!v || v == [NSNull null]) return NO;
+        if ([v isKindOfClass:[NSString class]]) {
+            NSString *trimmed = [(NSString *)v stringByTrimmingCharactersInSet:
+                                 [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+            return trimmed.length > 0;
+        }
+        return YES;
+    };
+    if (prev) {
+        JHFilterBlock captured = prev;
+        self.group.filterBlock = ^BOOL(id o, id v) {
+            return reqBlock(o, v) && captured(o, v);
+        };
+    } else {
+        self.group.filterBlock = reqBlock;
+    }
+    return self;
+}
+
+- (JHBinderWithLatestFromBlock)pausable {
+    return ^JHBinder *(JHBinder *signal) {
+        self.group.pauseSignalGroup = signal.group;
+        // 强持有 signal，使其生命周期不短于 self
+        objc_setAssociatedObject(self, "_jh_pausable_sig", signal, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        return self;
+    };
+}
+
+- (void)rebindTo:(nullable id)newTarget keyPath:(NSString *)newKeyPath {
+    [self.group rebindListenNodeTo:newTarget keyPath:newKeyPath];
+}
+
+- (JHBinderAssignBlock)assignTo {
+    return ^JHBinder *(JHBinder * __strong * outRef) {
+        if (outRef) *outRef = self;
+        return self;
+    };
+}
+
 @end

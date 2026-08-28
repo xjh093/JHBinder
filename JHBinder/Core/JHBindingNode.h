@@ -48,6 +48,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// 纯 block 订阅节点（无 target，只接收广播）
 + (instancetype)nodeWithOutBlock:(JHOutBlock)outBlock key:(NSString *)key;
 
+/// 热替换节点的监听 target 与 keyPath，同步更新 targetHash / nodeID（v1.8 rebind 用）
+- (void)updateToTarget:(nullable id)newTarget keyPath:(NSString *)newKeyPath;
+
 @end
 
 NS_ASSUME_NONNULL_END
