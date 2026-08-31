@@ -32,7 +32,8 @@ static NSString * const kCellID = @"V18CellDemoCell";
 @property (nonatomic, strong) UILabel   *kvoHintLabel;  ///< "全程未调用 reloadData"
 @property (nonatomic, assign) NSInteger  bindCount;
 @property (nonatomic, assign) NSInteger  rebindCount;
-@property (nonatomic, assign) NSInteger  modelChangeCount; ///< model 被修改次数
+@property (nonatomic, assign) NSInteger  modelChangeCount;  ///< model 被修改次数
+@property (nonatomic, assign) NSInteger  detailExpandCount; ///< 展开详情次数
 @end
 
 @implementation V18CellDemoViewController
@@ -43,7 +44,6 @@ static NSString * const kCellID = @"V18CellDemoCell";
     self.view.backgroundColor = [UIColor systemGroupedBackgroundColor];
     self.items = [V18CellDemoItemModel makeList:40];
     [self p_buildUI];
-    [self p_buildNavBar];
 }
 
 // MARK: - UI
@@ -58,7 +58,7 @@ static NSString * const kCellID = @"V18CellDemoCell";
     _statusLabel.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:_statusLabel];
 
-    // ── "全程未调用 reloadData" 高亮提示 ─────────────────────────
+    // ── 提示标签 ─────────────────────────────────────────────────
     _kvoHintLabel = [[UILabel alloc] init];
     _kvoHintLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightMedium];
     _kvoHintLabel.textColor = [UIColor systemGreenColor];
@@ -66,21 +66,37 @@ static NSString * const kCellID = @"V18CellDemoCell";
     _kvoHintLabel.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:_kvoHintLabel];
 
-    // ── 说明文字 ─────────────────────────────────────────────────
-    UILabel *hint = [[UILabel alloc] init];
-    hint.text = @"Cell 内绑定建立一次，复用时 rebindTo: 热替换目标。\n"
-                @"改名按钮修改 model，可见 Cell 通过 KVO 立即更新。";
-    hint.font = [UIFont systemFontOfSize:11];
-    hint.textColor = [UIColor secondaryLabelColor];
-    hint.textAlignment = NSTextAlignmentCenter;
-    hint.numberOfLines = 0;
-    hint.translatesAutoresizingMaskIntoConstraints = NO;
-    [self.view addSubview:hint];
+    // ── 按钮行（4个操作按钮）────────────────────────────────────
+    UIButton *(^btn)(NSString *, SEL, UIColor *) = ^UIButton *(NSString *title, SEL action, UIColor *color) {
+        UIButton *b = [UIButton buttonWithType:UIButtonTypeSystem];
+        [b setTitle:title forState:UIControlStateNormal];
+        b.backgroundColor = color;
+        b.tintColor = [UIColor whiteColor];
+        b.titleLabel.font = [UIFont systemFontOfSize:13 weight:UIFontWeightMedium];
+        b.layer.cornerRadius = 6;
+        b.clipsToBounds = YES;
+        b.translatesAutoresizingMaskIntoConstraints = NO;
+        [b addTarget:self action:action forControlEvents:UIControlEventTouchUpInside];
+        return b;
+    };
+
+    UIButton *btnAll      = btn(@"全改",   @selector(p_onRenameAll),    [UIColor systemBlueColor]);
+    UIButton *btnOne      = btn(@"改一条", @selector(p_onRenameOne),    [UIColor systemBlueColor]);
+    UIButton *btnExpand   = btn(@"展开",   @selector(p_onExpandDetail), [UIColor systemOrangeColor]);
+    UIButton *btnCollapse = btn(@"收起",   @selector(p_onCollapseAll),  [UIColor systemGrayColor]);
+
+    UIStackView *buttonRow = [[UIStackView alloc] initWithArrangedSubviews:@[btnAll, btnOne, btnExpand, btnCollapse]];
+    buttonRow.axis = UILayoutConstraintAxisHorizontal;
+    buttonRow.distribution = UIStackViewDistributionFillEqually;
+    buttonRow.spacing = 8;
+    buttonRow.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.view addSubview:buttonRow];
 
     // ── TableView ────────────────────────────────────────────────
     _tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStylePlain];
     _tableView.dataSource = self;
-    _tableView.rowHeight  = 52;
+    _tableView.rowHeight          = UITableViewAutomaticDimension;
+    _tableView.estimatedRowHeight = 64;
     [_tableView registerClass:[V18CellDemoCell class] forCellReuseIdentifier:kCellID];
     _tableView.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview:_tableView];
@@ -97,11 +113,12 @@ static NSString * const kCellID = @"V18CellDemoCell";
         [_kvoHintLabel.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
         [_kvoHintLabel.heightAnchor constraintEqualToConstant:24],
 
-        [hint.topAnchor constraintEqualToAnchor:_kvoHintLabel.bottomAnchor],
-        [hint.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:12],
-        [hint.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-12],
+        [buttonRow.topAnchor constraintEqualToAnchor:_kvoHintLabel.bottomAnchor constant:8],
+        [buttonRow.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:12],
+        [buttonRow.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-12],
+        [buttonRow.heightAnchor constraintEqualToConstant:34],
 
-        [_tableView.topAnchor constraintEqualToAnchor:hint.bottomAnchor constant:4],
+        [_tableView.topAnchor constraintEqualToAnchor:buttonRow.bottomAnchor constant:8],
         [_tableView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
         [_tableView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
         [_tableView.bottomAnchor constraintEqualToAnchor:self.view.bottomAnchor],
@@ -110,32 +127,18 @@ static NSString * const kCellID = @"V18CellDemoCell";
     [self p_updateStatus];
 }
 
-- (void)p_buildNavBar {
-    // 两个按钮：单条改名 / 全部改名
-    UIBarButtonItem *all = [[UIBarButtonItem alloc]
-        initWithTitle:@"全改"
-                style:UIBarButtonItemStylePlain
-               target:self
-               action:@selector(p_onRenameAll)];
-
-    UIBarButtonItem *one = [[UIBarButtonItem alloc]
-        initWithTitle:@"改一条"
-                style:UIBarButtonItemStylePlain
-               target:self
-               action:@selector(p_onRenameOne)];
-
-    self.navigationItem.rightBarButtonItems = @[all, one];
-}
-
 - (void)p_updateStatus {
     _statusLabel.text = [NSString stringWithFormat:
-        @"建立绑定 %ld 次  |  rebindTo: %ld 次  |  model 改动 %ld 次",
-        (long)_bindCount, (long)_rebindCount, (long)_modelChangeCount];
+        @"建立 %ld | rebind %ld | 改名 %ld | 展开 %ld",
+        (long)_bindCount, (long)_rebindCount,
+        (long)_modelChangeCount, (long)_detailExpandCount];
 
-    // 绿色提示：只要有 model 被改动过，就强调"全程未调用 reloadData"
-    _kvoHintLabel.text = _modelChangeCount > 0
-        ? [NSString stringWithFormat:@"✅ model 共改动 %ld 次，全程未调用 reloadData", (long)_modelChangeCount]
-        : @"← 点击右上角按钮修改 model，观察 Cell 实时响应";
+    NSInteger totalChanges = _modelChangeCount + _detailExpandCount;
+    _kvoHintLabel.text = totalChanges > 0
+        ? [NSString stringWithFormat:
+            @"✅ 改名 %ld 次未 reload | 展开 %ld 次用 reloadRows:",
+            (long)_modelChangeCount, (long)_detailExpandCount]
+        : @"← 点击上方按钮：改名（KVO 无 reload）/ 展开（reloadRows:）";
 }
 
 // MARK: - UITableViewDataSource
@@ -181,6 +184,33 @@ static NSString * const kCellID = @"V18CellDemoCell";
                               (unsigned long)(i + 1), (long)++_modelChangeCount];
     }
     // ← 同样不调用 reloadData。所有可见 Cell 通过 KVO 立即更新。
+    [self p_updateStatus];
+}
+
+// MARK: - 动态高度演示
+
+/// 展开一条随机 item 的详情（model 改变 → KVO → detailLabel → onHeightChanged → 重算高度）
+- (void)p_onExpandDetail {
+    NSUInteger idx = arc4random_uniform((uint32_t)self.items.count);
+    _detailExpandCount++;
+    NSString *detail = [NSString stringWithFormat:
+        @"展开第 %ld 次 — detail 内容由 JHBinder 实时写入 label（rebindTo: 内容更新），"
+        "高度变化由 reloadRows: 处理。两者各司其职。",
+        (long)_detailExpandCount];
+    self.items[idx].detail = detail;
+    // 高度变化需要 reloadRows: 重新测量该行
+    // 内容更新（name/tapCount）仍由 rebindTo: 无就处理，不过 reloadData
+    NSIndexPath *ip = [NSIndexPath indexPathForRow:(NSInteger)idx inSection:0];
+    [self.tableView reloadRowsAtIndexPaths:@[ip] withRowAnimation:UITableViewRowAnimationAutomatic];
+    [self p_updateStatus];
+}
+
+/// 收起所有详情
+- (void)p_onCollapseAll {
+    for (V18CellDemoItemModel *item in self.items) {
+        item.detail = @"";
+    }
+    [self.tableView reloadData];
     [self p_updateStatus];
 }
 

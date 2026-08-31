@@ -14,10 +14,12 @@
 @property (nonatomic, strong) UILabel  *nameLabel;
 @property (nonatomic, strong) UILabel  *countLabel;
 @property (nonatomic, strong) UIButton *incrementButton;
+@property (nonatomic, strong) UILabel  *detailLabel;   ///< 多行详情，高度随文字自适应
 // 绑定
 @property (nonatomic, strong) NSMutableArray *bindings;
 @property (nonatomic, strong) JHBinder       *nameBinder;
 @property (nonatomic, strong) JHBinder       *countBinder;
+// detail 不建 binder：每次均由 cellForRow / reloadRows: 直接赋值，高度变化由 UITableView 驱动
 // 当前 Model（弱引用，由 VC 持有数组保证生命周期）
 @property (nonatomic, weak)   V18CellDemoItemModel *currentModel;
 @end
@@ -41,7 +43,7 @@
     _nameLabel.translatesAutoresizingMaskIntoConstraints = NO;
     [self.contentView addSubview:_nameLabel];
 
-    // countLabel：居中，显示点击次数
+    // countLabel：name 右侧，显示点击次数
     _countLabel = [[UILabel alloc] init];
     _countLabel.font = [UIFont monospacedDigitSystemFontOfSize:13 weight:UIFontWeightRegular];
     _countLabel.textColor = [UIColor systemGrayColor];
@@ -59,17 +61,35 @@
     [_incrementButton addTarget:self action:@selector(p_onIncrement) forControlEvents:UIControlEventTouchUpInside];
     [self.contentView addSubview:_incrementButton];
 
+    // detailLabel：多行详情，高度随文字自适应（动态高度核心）
+    _detailLabel = [[UILabel alloc] init];
+    _detailLabel.font = [UIFont systemFontOfSize:13];
+    _detailLabel.textColor = [UIColor secondaryLabelColor];
+    _detailLabel.numberOfLines = 0;   // ← 允许任意行数，撑开 Cell 高度
+    _detailLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.contentView addSubview:_detailLabel];
+
+    // ── 约束：top-based，Cell 高度由内容决定 ──────────────────────
+    // detailLabel.bottom 锚定到 contentView.bottom，是整条高度链的"底边"
     [NSLayoutConstraint activateConstraints:@[
+        // 第一行：button 顶部对齐 contentView，name/count 与 button 垂直居中
+        [_incrementButton.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:10],
+        [_incrementButton.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor constant:-16],
+        [_incrementButton.heightAnchor constraintEqualToConstant:30],
+
         [_nameLabel.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor constant:16],
-        [_nameLabel.centerYAnchor constraintEqualToAnchor:self.contentView.centerYAnchor],
+        [_nameLabel.centerYAnchor constraintEqualToAnchor:_incrementButton.centerYAnchor],
         [_nameLabel.widthAnchor constraintEqualToConstant:120],
 
         [_countLabel.leadingAnchor constraintEqualToAnchor:_nameLabel.trailingAnchor constant:8],
-        [_countLabel.centerYAnchor constraintEqualToAnchor:self.contentView.centerYAnchor],
+        [_countLabel.centerYAnchor constraintEqualToAnchor:_incrementButton.centerYAnchor],
+        [_countLabel.trailingAnchor constraintLessThanOrEqualToAnchor:_incrementButton.leadingAnchor constant:-8],
 
-        [_incrementButton.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor constant:-16],
-        [_incrementButton.centerYAnchor constraintEqualToAnchor:self.contentView.centerYAnchor],
-        [_incrementButton.heightAnchor constraintEqualToConstant:30],
+        // 详情行：紧接第一行下方，bottom 驱动 Cell 高度
+        [_detailLabel.topAnchor constraintEqualToAnchor:_incrementButton.bottomAnchor constant:6],
+        [_detailLabel.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor constant:16],
+        [_detailLabel.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor constant:-16],
+        [_detailLabel.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-10],
     ]];
 }
 
@@ -92,7 +112,7 @@
 
     if (!_nameBinder) {
         // ──────────────────────────────────────────────────────────
-        // 首次使用：建立绑定，binder 存入 self.bindings 保持生命周期        
+        // 首次使用：建立绑定，binder 存入 self.bindings 保持生命周期
         // 规律：
         //   • 一个 binder = 监听「一个 model 属性」的变化
         //   • 一个属性 → 多个 UI：在同一 binder 上追加 .receive / .receiveMap 节点
@@ -124,6 +144,9 @@
             .assignTo(&_countBinder)
             .store(self.bindings);
 
+        // detail：高度相关属性，不建 binder，由 cellForRow/reloadRows: 直接赋值
+        _detailLabel.text = model.detail ?: @"";
+
     } else {
         // ──────────────────────────────────────────────────────────
         // Cell 复用：热替换监听目标，不重建链
@@ -133,6 +156,8 @@
         // ──────────────────────────────────────────────────────────
         [_nameBinder  rebindTo:model keyPath:@"name"];
         [_countBinder rebindTo:model keyPath:@"tapCount"];
+        // detail 同样直接赋值，reloadRows: 保证此处读到最新值
+        _detailLabel.text = model.detail ?: @"";
     }
 }
 
