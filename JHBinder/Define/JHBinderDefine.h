@@ -11,8 +11,8 @@
 #import <UIKit/UIKit.h>
 
 // MARK: - 版本号
-#define JHBinderVersionString   @"1.8.0"
-#define JHBinderVersionNumber   0x010800  ///< 高8位Major，中8位Minor，低8位Patch
+#define JHBinderVersionString_   @"1.8.0"
+#define JHBinderVersionNumber_   0x010800  ///< 高8位Major，中8位Minor，低8位Patch
 
 
 // MARK: - 绑定方向（位掩码）
